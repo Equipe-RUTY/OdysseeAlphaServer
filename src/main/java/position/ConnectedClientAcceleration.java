@@ -1,6 +1,6 @@
 package position;
 
-import java.io.BufferedReader; 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -18,17 +18,27 @@ public class ConnectedClientAcceleration implements Runnable {
 	private Migrant agent;
 	private double[] cooInitiale;
 	private Socket socket;
-
+	
+        /**
+         * 
+         * @param clientSocket
+         * @param _server 
+         * 
+         * set intial coord
+         * set inputStream
+         * set outputStream
+         * and start the thread
+         */
 	public ConnectedClientAcceleration(final Socket clientSocket, final ServerThreadAcceleration _server) {
-		System.out.println("j'initialise le socket");
+		//System.out.println("j'initialise le socket");
 		socket = clientSocket;
 		cooInitiale = new double[2];
 		cooInitiale[0] = 2;
 		cooInitiale[1] = 12.5;
 		try {
 			server = _server;
-			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-			out = new PrintWriter(clientSocket.getOutputStream());
+			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			out = new PrintWriter(socket.getOutputStream());
 			new Thread(this).start();
 
 		} catch (final IOException e) {
@@ -37,6 +47,10 @@ public class ConnectedClientAcceleration implements Runnable {
 
 	}
 
+        /**
+         * get l,m,n and x,y,z of the smartphone and set the new coord from it
+         * (l,m,n = orientation) (x,y,z = acceleration)
+         */
 	@Override
 	public void run() {
 
@@ -45,7 +59,7 @@ public class ConnectedClientAcceleration implements Runnable {
 		try {
 			while ((line = in.readLine()) != null) {
 
-				System.out.println("Hey ! je viens de recevoir quelque chose !");
+				//System.out.println("Hey ! je viens de recevoir quelque chose !");
 				final String[] res = line.split(";");
 
 				if (res[0].equals("move")) {
@@ -53,12 +67,12 @@ public class ConnectedClientAcceleration implements Runnable {
 
 					for (int i = 1; i < res.length; i++)
 						resDouble[i - 1] = Double.parseDouble(res[i]);
-					System.out.println("Je recoie " + resDouble[0] + ";" + resDouble[1] + ";" + resDouble[2] + ";"
-							+ resDouble[3] + ";" + resDouble[4] + ";" + resDouble[5]);
+					//System.out.println("Je recoie " + resDouble[0] + ";" + resDouble[1] + ";" + resDouble[2] + ";"
+					//		+ resDouble[3] + ";" + resDouble[4] + ";" + resDouble[5]);
 
 					if (agent == null) {
-						System.out.println("Je n'ai pas encore de blobs. Je vais donc en prendre un");
-						System.out.println("Que je place en " + cooInitiale[0] + ";" + cooInitiale[1]);
+						//System.out.println("Je n'ai pas encore de blobs. Je vais donc en prendre un");
+						//System.out.println("Que je place en " + cooInitiale[0] + ";" + cooInitiale[1]);
 						agent = server.adopterBlob(cooInitiale);
 					} else {
 						// Les trois 1eres valeurs me donne l'info de l'orientation du t�l�phone
@@ -74,7 +88,7 @@ public class ConnectedClientAcceleration implements Runnable {
 						server.moveBlob(agent, coo);
 					}
 //
-					//TODO fix this garbage trash 
+					//TODO fix this garbage trash
 //					ArrayList<double[]> listePos = agent.getBlob().getGlobules_position();
 //					ArrayList<Color> listeCouleur = agent.getBlob().getGlobules_couleurs();
 					String str = "" + agent.getBlob().getCoordonnee()[0] + ";" + agent.getBlob() + ";"

@@ -15,6 +15,11 @@ public class PositionSimulationThread extends Thread{
 	public boolean is_interrupt;
 	public ArrayList<Migrant> blobImmobilises;
 	
+        /**
+         *
+         * @param tAmas 
+         * 
+         */
 	public PositionSimulationThread(MyAMAS tAmas){
 		super();
 		
@@ -22,11 +27,20 @@ public class PositionSimulationThread extends Thread{
 		blobImmobilises = new ArrayList<Migrant>();
 	}
 	
+        /**
+         * 
+         * @param b
+         * @param coo 
+         * set new coord
+         */
 	public void moveBlob(Migrant b, double[] coo){
 		b.getBlob().setCoordonnee(coo);
 	}
 	
-	
+	/**
+         * 
+         * get the new coord from all neighbor
+         */
 	private void bouger_blobs() {
 		double[] coo;
 		
@@ -39,12 +53,17 @@ public class PositionSimulationThread extends Thread{
 		}
 	}
 	
+        /**
+         * stop the movement of the blob
+         */
 	public void interruption() {
-        timer.cancel();
+                timer.cancel();
 		is_interrupt = true;
-		
-    }
+	}
 	
+        /**
+         * start the movement of the blob
+         */
 	//@Override
 	public void demarrer() {
 		
@@ -58,12 +77,14 @@ public class PositionSimulationThread extends Thread{
 			  }
 			}, 1*1000, 1*1000);
 		
-		System.out.println("hey !");
+		//System.out.println("hey !");
 		is_interrupt = false;
 	}
 	
 	
-	
+	/**
+         * ??
+         */
 	@Override
 	public void run(){
 		
@@ -71,18 +92,36 @@ public class PositionSimulationThread extends Thread{
 		
 	}
 
+        /**
+         * 
+         * @return if is interrupt 
+         */
 	public boolean isIs_interrupt() {
 		return is_interrupt;
 	}
 
+        /**
+         * 
+         * @param is_interrupt 
+         * set is_interrupt
+         */
 	public void setIs_interrupt(boolean is_interrupt) {
 		this.is_interrupt = is_interrupt;
 	}
 	
+        /**
+         * 
+         * @param m
+         * add a blob
+         */
 	public void add_immobilise(Migrant m) {
 		blobImmobilises.add(m);
 	}
-	
+	/**
+         * 
+         * @param m 
+         * remove a blob
+         */
 	public void remove_immobilise(Migrant m) {
 		blobImmobilises.remove(m);
 	}
