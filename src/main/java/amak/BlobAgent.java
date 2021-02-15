@@ -3,49 +3,69 @@ package amak;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Set;
-
 import application.Controller;
 import application.ExceptionHandler;
 import business.Blob;
 import business.Critere;
-//import business.CriticalityFunction;
 import fr.irit.smac.amak.Agent;
 import fr.irit.smac.amak.tools.Log;
 import javafx.scene.paint.Color;
 
+	// Enum couvrant les differentes actions pouvant etre realise par un blob
 enum Action {
 	CREER, SE_DEPLACER, SE_SUICIDER, RESTER, CHANGER_COULEUR, CHANGER_FORME, MURIR
 };
 
 public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 
+	// L'objet blob
 	protected Blob blob;
-	protected ArrayList<BlobAgent> voisins;
-
+	// Liste de blob representant les voisin du blob courant.
+	private ArrayList<BlobAgent> voisins;
+	// Action courante realise par le blob, modifie dans Migrant et Immaginaire
 	protected Action currentAction;
-	protected Immaginaire newFils;
-	protected Action actionPassive;
+	// Nouveau fils ?
+	private Immaginaire newFils;
+	// Action passive, probablement inutile, initialise et jamais reutiliser
+	private Action actionPassive;
+	// Ancienne direction, aide a calculer la nouvelle. Setter et getter sur la variable. Utilise dans Immaginaire
 	protected double[] pastDirection;
-
-	// criticite : par convention : negative si en manque, positive si trop nombreux.
-	protected double[] criticite; // TODO la criticite semble etre comrpise entre 0 et 8
-
-	protected double criticite_globale;
+	// criticite : par convention : negative si en manque, positive si trop nombreux. Utilise dans Migrants / Immaginaire
+	protected double[] criticite;
+	// criticite globale est calcule a partir des criteres : Heterogeneite, isolement, stabilite.
+	private double criticite_globale;
+	// Direction general. A l'air d'etre la direction courante calcule a partir de pastDirection. Utilise dans Immaginaire
 	protected double[] directGeneral;
-	protected double epsilon = 0.05;
-	protected double degreChangement;
+	// Valeur statique de reference. Certains mouvement dependent de Epsilon
+	private double epsilon = 0.05;
+	// Initialise a 0, jamais reutilise dans cette classe
+	private double degreChangement;
+	// Incremente a chaque changement de couleur, n'est pas init. Utilise dans Migrants / Immaginaire
 	protected double nbChangements;
-	protected double moyenneChangements;
+	// Pas initialise, pas appele dans le code courant
+	private double moyenneChangements;
+	// Semble representer le controller d'un blob dans l'application. Utilise dans Migrants
 	protected Controller controller;
 
+	// Commentaire perdu au milieu
 	// lie aux decisions 'passives' : en fonction de l'etat du voisinage
 
-	private HashMap<BlobAgent, Integer> connaissance; // repertorie le temps passe avec un agent
+	// repertorie le temps passe avec un agent. Jamais appele dans la classe
+	private HashMap<BlobAgent, Integer> connaissance;
+	// Jamais utilise
 	private int tpsConnaissanceRequise = 2;
+	// Couleur courante d'un blob
 	private Color couleurCible;
-
+	// temps, initialise utilise dans migrant et immaginaire
 	protected long tps;
+
+	/* Fonction d'initialisation des parametres du blob :
+	Couleur
+	Criticite
+	Voisins connus
+	Action courante
+	Direction courante
+	 */
 
 	@Override
 	protected void onInitialization() {
@@ -67,10 +87,12 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 		tps = System.currentTimeMillis();
 	}
 
+	// Constructeur. Un blob et un controller pour ce blob
 	public BlobAgent(MyAMAS amas, Blob b, Controller controller) {
 		super(amas, b, controller);
 	}
 
+	// Getter sur l'environnement et les voisins genere.
 	@Override
 	protected void onPerceive() {
 		try {
@@ -80,8 +102,9 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 			eh.showError(e);
 		}
 	}
-	
-	double[] RGBToHSV(Color c) {
+
+	// Convertit les couleurs du format RGB a HSV
+	private double[] RGBToHSV(Color c) {
 		/* double[] trash = new double[3];
 		trash[0] = c.getRed();
 		trash[1] = c.getGreen();
@@ -111,17 +134,20 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 		hsv[2] = max;
 		return hsv;
 	}
-	
-	double auxil(double n, double[] hsv) {
+
+	// fonction de calcul utilise en dessous pour passer les couleurs de HSV a RGB
+	private double auxil(double n, double[] hsv) {
 		double k = (n + hsv[0] / 60.f) % 6.f;
 		return hsv[2] - hsv[1] * hsv[2] * Math.max(Math.min(k, Math.min(4.f - k, 1.0)), 0.0);
 	}
-	
-	Color HSVToRGB(double[] hsv) {
-//		return new Color(hsv[0], hsv[1], hsv[2], 1.0);
+
+	// Fonction de conversion de couleur du format HSV a RGB
+	private Color HSVToRGB(double[] hsv) {
+	// Return new Color(hsv[0], hsv[1], hsv[2], 1.0);
 		return new Color(auxil(5.0, hsv), auxil(3.0, hsv), auxil(1.0, hsv), 1.0);
 	}
-	
+
+	// Fonction de mise a jour de la couleur, la méthode implique de passer par le format HSV pour les calculs et stock en RGB
 	protected void updateColor() {
 		Color init = this.blob.getMaSuperCouleurPreferee();
 		double[] initHSV = RGBToHSV(init);
@@ -133,16 +159,17 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 			colHSV[i] = coef * initHSV[i] + unmoinscoef * cibleHSV[i];
 		}
 		Color nvColor = HSVToRGB(colHSV);
-		this.blob.setMaSuperCouleurPreferee(nvColor);
+		this.blob.setMaCouleur(nvColor);
 	}
 	/*
-	 * **************************************************************** * **********
-	 * ACTION ******************* *
-	 * ****************************************************************
-	 */
+	 * ***************************************************************************
+	 ********************************** ACTION ***********************************
+	 * ***************************************************************************
+	 * Utilise dans Migrants et Immaginaires
+	 *  */
 
+	// Permet a un blob de se suicider -> Etre enlever de l'environnement
 	protected void action_se_suicider() {
-
 		Log.debug("quela", "imag decide suicide");
 		try {
 			currentAction = Action.SE_SUICIDER;
@@ -155,8 +182,8 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 		}
 	}
 
+	// Place un blob dans l'environnement
 	protected void action_creer() {
-
 		Log.debug("quela", "imag decide creer");
 		try {
 			currentAction = Action.CREER;
@@ -186,6 +213,7 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 //		};
 //	}
 
+	// Permet au blob de se déplacer en utilisant directGeneral et pastDirection
 	protected void action_se_deplacer(float delta) {
 		try {
 			double[] tmp = getAmas().getEnvironment().nouvellesCoordonnees(this, Math.random() * delta * 5.f,
@@ -238,11 +266,12 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 
 	/*
 	 * ************************************************************************ *
-	 * ************** CRITICALITY *************************** *
-	 * ************************************************************************
+	 * **************************** CRITICALITY ******************************* *
+	 * ************************************************************************ *
 	 */
 
-	protected double computeCriticalityIsolement() {
+	// Getter sur le critere isolement du blob
+	private double computeCriticalityIsolement() {
 		double res = 0;
 		try {
 			res = getAmas().getEnvironment().getIsolement() - voisins.size();
@@ -250,18 +279,19 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 			ExceptionHandler eh = new ExceptionHandler();
 			eh.showError(e);
 		}
-
 		return (res);
 	}
-	
-	double colorDiff(Color c1, Color c2) {
+
+	// Fonction de calcul de la difference entre deux couleurs
+	private double colorDiff(Color c1, Color c2) {
 		double r = c1.getRed() - c2.getRed();
 		double g = c1.getGreen() - c2.getGreen();
 		double b = c1.getBlue() - c2.getBlue();
 		
 		return r*r + g*g + b*b;
 	}
-	
+
+	// Renvoit le plus proche voisin de notre blob. Utilise dans Migrants / Immaginaire
 	protected Blob getPlusProcheVoisin() {
 		Blob b = null;
 		double dst = Double.POSITIVE_INFINITY;
@@ -278,18 +308,19 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 		return b;
 	}
 
-	protected double computeCriticalityHeterogeneite() {
+	// Getter sur le critere Heterogeneite
+	private double computeCriticalityHeterogeneite() {
 
 		int nbpareils = 0;
 		for (int i = 0; i < voisins.size(); i++) {
 			Color couleur = voisins.get(i).getBlob().getMaSuperCouleurPreferee();
 			if (colorDiff(couleur, blob.getMaSuperCouleurPreferee()) <= 0.1f) nbpareils++;
 		}
-
 		double nbVoisinsOptimal = ((100 - getAmas().getEnvironment().getHeterogeneite()) / 100) * voisins.size();
 		return nbpareils - nbVoisinsOptimal;
 	}
 
+	// Getter sur le critere Stabilite
 	protected double computeCriticalityStabilitePosition() {
 		// calcul du nombre de voisins qui "bougent".
 		// chaque voisin bouge ssi DirectGeneral > (eps,eps)
@@ -323,6 +354,7 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 	 * }
 	 */
 
+	// Renvoit la criticite generale calcule a partir des criteres du blob. Utilise dans Migrants / Immaginaire
 	protected double computeCriticalityInTideal() {
 
 		try {
@@ -341,7 +373,7 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 	}
 
 	// retourne le critere qui a une plus grande criticite
-	public Critere Most_critical_critere(double[] subjectCriticity) {
+	protected Critere Most_critical_critere(double[] subjectCriticity) {
 		// return (Collections.max(criticite.entrySet(),
 		// Map.Entry.comparingByValue()).getKey());
 		double max_valeur = subjectCriticity[0];
@@ -369,13 +401,10 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 		return (res);
 	}
 
-	public double[] getCriticite() {
-		return criticite;
-	}
 
 	/*
-	 * ****************************************** **************************
-	 * *********** GETTER / SETTER **************************
+	 * ***********************************************************************
+	 * ************************** GETTER / SETTER ****************************
 	 * ***********************************************************************
 	 */
 
@@ -391,12 +420,28 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 		this.voisins.add(blobToAdd);
 	}
 
+	public double[] getCriticite() {
+		return criticite;
+	}
+
 	public void clearVoisin() {
 		this.voisins.clear();
 	}
 
 	public ArrayList<BlobAgent> getVoisins() {
 		return voisins;
+	}
+
+	public double[] getPastDirection() {
+		return pastDirection;
+	}
+
+	public void setPastDirection(double[] pastDirection) {
+		this.pastDirection = pastDirection;
+	}
+
+	public double[] getDirectGeneral() {
+		return directGeneral;
 	}
 
 	public void setVoisins(ArrayList<BlobAgent> voisins) {
@@ -410,18 +455,6 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
 
 	public void setCriticite_globale(int criticite_globale) {
 		this.criticite_globale = criticite_globale;
-	}
-
-	public double[] getPastDirection() {
-		return pastDirection;
-	}
-
-	public void setPastDirection(double[] pastDirection) {
-		this.pastDirection = pastDirection;
-	}
-
-	public double[] getDirectGeneral() {
-		return directGeneral;
 	}
 
 	public void setDirectGeneral(double[] directGeneral) {

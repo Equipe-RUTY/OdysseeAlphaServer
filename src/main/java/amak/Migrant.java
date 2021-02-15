@@ -166,7 +166,6 @@ public class Migrant extends BlobAgent {
 	}
 
 	public void tr_to_t0() {
-
 		{
 			try {
 				isHome = true;
