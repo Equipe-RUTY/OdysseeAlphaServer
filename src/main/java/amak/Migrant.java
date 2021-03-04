@@ -7,241 +7,278 @@ import application.ExceptionHandler;
 import business.Blob;
 import business.Critere;
 
+/**
+ * Migrant blob.
+ *
+ * @author inconnu, [ugo](https://github.com/gogonouze)
+ * @version 1.0
+ * @see BlobAgent
+ */
 public class Migrant extends BlobAgent {
+  /**
+   * The home of the blob.
+   */
+  private boolean isHome;
+  /**
+   * If the blob is riped.
+   */
+  private boolean isRiped;
+  /**
+   * If the blob is inside.
+   */
+  private boolean rentrer = false;
+  /**
+   * Rate for the riped.
+   */
+  private final double tauxMurissement = 5;
+  /**
+   * Rate of "white" or blank.
+   */
+  private float tauxDeBlanc;
 
-	private boolean isHome;
-	private boolean isRiped;
-	private boolean rentrer = false;
-	private double tauxMurissement = 5;
-	private float tauxDeBlanc;
-	
-	public Migrant(MyAMAS amas, Blob b, Controller controller) {
-		super(amas, b, controller);
-		isHome = true;
-		isRiped = false;
-	}
+  /**
+   * Constructor.
+   *
+   * @param amas
+   * @param b
+   * @param controller
+   */
+  public Migrant(final MyAMAS amas, final Blob b, final Controller controller) {
+    super(amas, b, controller);
+    isHome = true;
+    isRiped = false;
+  }
 
-	public boolean isHome() {
-		return isHome;
-	}
+  /**
+   * @return if the blob is home
+   */
+  public boolean isHome() {
+    return isHome;
+  }
 
-	public void setHome(boolean isHome) {
-		this.isHome = isHome;
-	}
+  /**
+   * @param pIsHome
+   */
+  @Deprecated
+  public void setHome(final boolean pIsHome) {
+    this.isHome = pIsHome;
+  }
 
-	// boolean renvoyant true avec une probabilit� de 'tauxMurissement' g�r� dans
-	// l'IHM.
-	private boolean mustRipe() {
-		return (Math.random() * 100 < tauxMurissement);
-	}
+  /**
+   * @return a random ripe rate.
+   */
+  private boolean mustRipe() {
+    final int hundred = 100;
+    return (Math.random() * hundred < tauxMurissement);
+  }
 
-	/*
-	 * private double computeCriticalityMurissement(){ // je compte le nombre de
-	 * voisins murs autour de moi. double cpt = 0; for (int i = 0; i<
-	 * voisins.size(); i++){ if( ( (Migrant)(voisins.get(i))).isRiped) cpt++; }
-	 * return(nbRipedIdeal - cpt); }
-	 * 
-	 * private double computeCriticalityPositionTo(){ // je compte le nombre de
-	 * voisins qui bougent autour de moi. double cpt = 0; for (int i = 0; i<
-	 * voisins.size(); i++){ if( ( (Migrant)(voisins.get(i))).isRiped) cpt++; }
-	 * return(nbRipedIdeal - cpt); }
-	 * 
-	 * private double computeCriticalityIsolementTo(){ //if (nbBlobs / 2 > 1 )
-	 * 
-	 * return(getAmas().getEnvironment().getIsolement() - voisins.size()); }
-	 */
-	
-	
-	private void recalculTauxDeBlanc()
-	{
-		int cpt = 0;
-		ArrayList<Migrant> Hibernants = getAmas().getEnvironment().getHibernants();
-		for (Migrant actuel : Hibernants)
-		{
-			if (!(actuel.isRiped()))
-			{
-				cpt+=1;
-			}
-		}
-		tauxDeBlanc = (float)cpt/(float)Hibernants.size();
-	}
-	
+  /**
+   * compute the rate of "white" (or blank).
+   */
+  private void computeBlancRate() {
+    int cpt = 0;
+    ArrayList<Migrant> hibernants = getAmas().getEnvironment().getHibernants();
+    for (Migrant actuel : hibernants) {
+      if (!(actuel.isRiped())) {
+        cpt += 1;
+      }
+    }
+    tauxDeBlanc = (float) cpt / (float) hibernants.size();
+  }
 
-	private void action_murir() {	
-		recalculTauxDeBlanc();
-		if (!isRiped) {			
-			if (tauxDeBlanc > 0.7)
-			{
-				isRiped = true;
-				blob.choisirCouleurAleatoire();	
-			}
-			
-		}
-	}
+  /**
+   * The blob is now riped.
+   */
+  private void actionRipe() {
+    computeBlancRate();
+    final double seven = 0.7;
+    if (!isRiped) {
+      if (tauxDeBlanc > seven) {
+        isRiped = true;
+        getBlob().choisirCouleurAleatoire();
+      }
 
-	@Override
-	protected void onDecideAndAct() {
-		long millis = System.currentTimeMillis() - tps;
-		tps = System.currentTimeMillis();
-		try {
+    }
+  }
 
-			nbChangements = 0;
-			currentAction = Action.RESTER; // to initialise
-			if (isHome) {
-			    if (mustRipe()) {
-			    	action_murir();
-			    }
-				action_se_deplacer(millis/1000.f);
-			} else {
-				updateColor();
-			}
-			BlobAgent agentNeedingHelp = super.getMoreCriticalAgent();
-			Critere most_critic = Most_critical_critere(agentNeedingHelp.getCriticite());
+  /**
+   * From decision to action.
+   */
+  @Override
+  protected void onDecideAndAct() {
+    long millis = System.currentTimeMillis() - getTps();
+    setTps(System.currentTimeMillis());
+    try {
 
-			// Si je suis sans TR/TI ne peux pas me mouvoir. Je ne peux donc pas gerer la
-			// criticite de position
-			// Je vais aider le plus critique sur une autre de ses criticites.
-			if (!isHome && most_critic == Critere.Stabilite_position) {
-				double[] tmp = agentNeedingHelp.getCriticite();
-				tmp[Critere.Heterogeneite.getValue()] = 0;
-				most_critic = Most_critical_critere(tmp);
-			}
+      setNumberOfChange(0);
+      setCurrentAction(Action.IDLE); // to initialise
+      if (isHome) {
+        if (mustRipe()) {
+          actionRipe();
+        }
+        final float thousand = 1000.f;
+        actionMove(millis / thousand);
+      } else {
+        updateColor();
+      }
+      BlobAgent agentNeedingHelp = super.getMostCriticalNeighbour();
+      Critere mostCritic =
+          mostCriticalCriterion(agentNeedingHelp.getCriticality());
 
-			switch (most_critic) {
-			case Isolement:
-				// too few neighboors -> criticite.ISOLEMENT > 0 -> I have procreate
-				if (criticite[Critere.Isolement.getValue()] > 3.f)
-					action_creer();
-				break;
+      // Si je suis sans TR/TI ne peux pas me mouvoir.
+      // Je ne peux donc pas gerer la criticite de position
+      // Je vais aider le plus critique sur une autre de ses criticites.
+      if (!isHome && mostCritic == Critere.Stabilite_position) {
+        double[] tmp = agentNeedingHelp.getCriticality();
+        tmp[Critere.Heterogeneite.getValue()] = 0;
+        mostCritic = mostCriticalCriterion(tmp);
+      }
 
-			case Stabilite_position:
-				// only in To
-				break;
+      switch (mostCritic) {
+        case Isolement:
+          // too few neighboors -> criticite.ISOLEMENT > 0 -> I have procreate
+          final float three = 3.0f;
+          if (getCriticality()[Critere.Isolement.getValue()] > three) {
+            actionCreate();
+          }
+          break;
 
-			case Heterogeneite:
-				// if >0 then it's too homogeneous. --> I change the color in a random one.
-				// else it's too heterogeneous. -> I change my color to the most present color
-				if (criticite[Critere.Heterogeneite.getValue()] > 0) {
-					action_changerCouleur();
-				} else {
-					Blob v = getPlusProcheVoisin();
-					if (v == blob) System.out.println("putain");
-					if (v == null) {
-						action_changerCouleur();
-					} else {				
-						action_changerCouleur(getPlusProcheVoisin().getMaSuperCouleurPreferee());
-					}
-				}
-				break;
+        case Stabilite_position:
+          // only in To
+          break;
 
-			default:
-				break;
-			}
-		} catch (Exception e) {
-			ExceptionHandler eh = new ExceptionHandler();
-			eh.showError(e);
-		}
-	}
+        case Heterogeneite:
+          // if >0 then it's too homogeneous.
+          // --> I change the color in a random one.
+          // else it's too heterogeneous.
+          // -> I change my color to the most present color
+          if (getCriticality()[Critere.Heterogeneite.getValue()] > 0) {
+            actionChangeColor();
+          } else {
+            Blob v = getClosestNeighbour();
+            if (v == null) {
+              actionChangeColor();
+            } else {
+              actionChangeColor(getClosestNeighbour()
+                  .getMaSuperCouleurPreferee());
+            }
+          }
+          break;
 
-	public void t0_to_tr() {
-		try {
-			isHome = false;
-			blob.setCoordonnee(blob.genererCoordonneesAleaDansCarre(getAmas().getEnvironment().rayonTerrain * 2));
-			getAmas().getEnvironment().t0_to_tr(this);
-		} catch (Exception e) {
-			ExceptionHandler eh = new ExceptionHandler();
-			eh.showError(e);
-		}
-	}
+        default:
+          break;
+      }
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
+  }
 
-	public void t0_to_tr(double[] coo) {
-		try {
-			isHome = false;
-			blob.setCoordonnee(coo);
-			getAmas().getEnvironment().t0_to_tr(this);
-		} catch (Exception e) {
-			ExceptionHandler eh = new ExceptionHandler();
-			eh.showError(e);
-		}
-	}
+  /**
+   * move from To to TR.
+   */
+  public void t0ToTr() {
+    try {
+      isHome = false;
+      getBlob().setCoordonnee(getBlob().genererCoordonneesAleaDansCarre(
+          getAmas().getEnvironment().getRayonTerrain() * 2));
+      getAmas().getEnvironment().t0ToTr(this);
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
+  }
 
-	public void tr_to_t0() {
-		{
-			try {
-				isHome = true;
-//			blob.setCoordonnee(blob.genererCoordonneeAleaDansCercle(100));
-				getAmas().getEnvironment().tr_to_t0(this);
-				final Migrant m = this;
+  /**
+   * move from TO to TR at a given coordinate.
+   *
+   * @param coordinate
+   */
+  public void t0ToTr(final double[] coordinate) {
+    try {
+      isHome = false;
+      getBlob().setCoordonnee(coordinate);
+      getAmas().getEnvironment().t0ToTr(this);
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
+  }
 
-//				controller.add_blobHibernant(m);
-//				controller.remove_blobMigrant(m);
-			} catch (Exception e) {
-				ExceptionHandler eh = new ExceptionHandler();
-				eh.showError(e);
-			}
-		}
-	}
+  /**
+   * move from TR to TO.
+   */
+  public void trToT0() {
+    try {
+      isHome = true;
+      getAmas().getEnvironment().trToT0(this);
+      final Migrant m = this;
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
 
-//	public void tr_to_t0(double[] coo){
-//		try {
-//			isHome = true;
-//			blob.setCoordonnee(coo);
-//			getAmas().getEnvironment().tr_to_t0(this);
-//			controller.add_blobHibernant(this);
-//			controller.remove_blobMigrant(this);
-//		} catch(Exception e)
-//		{
-//			ExceptionHandler eh = new ExceptionHandler();
-//			eh.showError(e);
-//		}
-//	}
+  }
 
-	/*
-	 * private double computeCriticalityInTo(){
-	 * criticite[Critere.Murissement.getValue()] = computeCriticalityMurissement();
-	 * criticite[Critere.Isolement.getValue()] = computeCriticalityIsolementTo();
-	 * criticite[Critere.Stabilite_position.getValue()] =
-	 * computeCriticalityPositionTo();
-	 * 
-	 * return criticite[Critere.Murissement.getValue()]; // TODO }
-	 */
+  /**
+   *
+   * @return criticality
+   */
+  @Override
+  protected double computeCriticality() {
+    double res = 0;
+    try {
+      if (!isHome) {
+        res = computeGlobalCriticality();
+      }
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
+    return (res);
+  }
 
-	@Override
-	protected double computeCriticality() {
-		double res = 0;
-		try {
-			if (!isHome)
-				res = computeCriticalityInTideal();
-		} catch (Exception e) {
-			ExceptionHandler eh = new ExceptionHandler();
-			eh.showError(e);
-		}
-		return (res);
-	}
+  /**
+   *
+   * @return if is riped
+   */
+  public boolean isRiped() {
+    return isRiped;
+  }
 
-	public boolean isRiped() {
-		return isRiped;
-	}
+  /**
+   *
+   * @param pIsRiped
+   */
+  @Deprecated
+  public void setRiped(final boolean pIsRiped) {
+    this.isRiped = pIsRiped;
+  }
 
-	public void setRiped(boolean isRiped) {
-		this.isRiped = isRiped;
-	}
+  /**
+   * set "the blob inside".
+   */
+  public void rentrerBlob() {
+    rentrer = true;
+  }
 
-	public void rentrerBlob() {
-		rentrer = true;
-	}
+  /**
+   * get new selection.
+   */
+  public void selectionne() {
+    getController().deleteSelection();
+    getController().selectionne(this);
+  }
 
-	public void selectionne() {
-		controller.deleteSelection();
-		controller.selectionne(this);
-	}
-
-	@Override
-	protected void onAgentCycleEnd() {
-		if (rentrer) {
-			tr_to_t0();
-			rentrer = false;
-		}
-	}
+  /**
+   * kill the blob.
+   */
+  @Override
+  protected void onAgentCycleEnd() {
+    if (rentrer) {
+      trToT0();
+      rentrer = false;
+    }
+  }
 
 }
