@@ -1,468 +1,644 @@
 package amak;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
+
 import application.Controller;
 import application.ExceptionHandler;
 import business.Blob;
 import business.Critere;
 import fr.irit.smac.amak.Agent;
-import fr.irit.smac.amak.tools.Log;
 import javafx.scene.paint.Color;
 
-	// Enum couvrant les differentes actions pouvant etre realise par un blob
+/**
+ * Enumeration of all actions a blob can do.
+ */
 enum Action {
-	CREER, SE_DEPLACER, SE_SUICIDER, RESTER, CHANGER_COULEUR, CHANGER_FORME, MURIR
-};
+  /**
+   * Create the blob in the environment.
+   */
+  CREATE,
+  /**
+   * The blob is moving.
+   */
+  MOVE,
+  /**
+   * Remove the blob from the environment.
+   */
+  DELETE,
+  /**
+   * The blob doesn't do anything.
+   */
+  IDLE
+}
 
+/**
+ * Blob agent is the representation of the blob on his environment.
+ * @author inconnu, [ugo](https://github.com/gogonouze)
+ * @version 1.0
+ * @see Agent<MyAMAS, MyEnvironment>
+ */
 public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
+  /**
+   * The blob that the blobAgent refer to.
+   */
+  private Blob blob;
 
-	// L'objet blob
-	protected Blob blob;
-	// Liste de blob representant les voisin du blob courant.
-	private ArrayList<BlobAgent> voisins;
-	// Action courante realise par le blob, modifie dans Migrant et Immaginaire
-	protected Action currentAction;
-	// Nouveau fils ?
-	private Immaginaire newFils;
-	// Action passive, probablement inutile, initialise et jamais reutiliser
-	private Action actionPassive;
-	// Ancienne direction, aide a calculer la nouvelle. Setter et getter sur la variable. Utilise dans Immaginaire
-	protected double[] pastDirection;
-	// criticite : par convention : negative si en manque, positive si trop nombreux. Utilise dans Migrants / Immaginaire
-	protected double[] criticite;
-	// criticite globale est calcule a partir des criteres : Heterogeneite, isolement, stabilite.
-	private double criticite_globale;
-	// Direction general. A l'air d'etre la direction courante calcule a partir de pastDirection. Utilise dans Immaginaire
-	protected double[] directGeneral;
-	// Valeur statique de reference. Certains mouvement dependent de Epsilon
-	private double epsilon = 0.05;
-	// Initialise a 0, jamais reutilise dans cette classe
-	private double degreChangement;
-	// Incremente a chaque changement de couleur, n'est pas init. Utilise dans Migrants / Immaginaire
-	protected double nbChangements;
-	// Pas initialise, pas appele dans le code courant
-	private double moyenneChangements;
-	// Semble representer le controller d'un blob dans l'application. Utilise dans Migrants
-	protected Controller controller;
+  /**
+   * Current neighbour of the blob.
+   */
+  private ArrayList<BlobAgent> neighbour;
 
-	// Commentaire perdu au milieu
-	// lie aux decisions 'passives' : en fonction de l'etat du voisinage
+  /**
+   * Current action the blob is doing.
+   */
+  private Action currentAction;
 
-	// repertorie le temps passe avec un agent. Jamais appele dans la classe
-	private HashMap<BlobAgent, Integer> connaissance;
-	// Jamais utilise
-	private int tpsConnaissanceRequise = 2;
-	// Couleur courante d'un blob
-	private Color couleurCible;
-	// temps, initialise utilise dans migrant et immaginaire
-	protected long tps;
+  /**
+   * Old set of coordinates, used to calculate the new one.
+   */
+  private double[] pastDirection;
 
-	/* Fonction d'initialisation des parametres du blob :
-	Couleur
-	Criticite
-	Voisins connus
-	Action courante
-	Direction courante
-	 */
+  /**
+   * Criticality is < 0 if there is not enough blob
+   * and > 0 if there are to many.
+   */
+  private double[] criticality;
 
-	@Override
-	protected void onInitialization() {
-		this.blob = (Blob) params[0];
-		couleurCible = this.blob.getMaSuperCouleurPreferee();
-		criticite = new double[Critere.FIN.getValue()];
-		for (int i = 0; i < Critere.FIN.getValue(); i++)
-			criticite[i] = 0;
-		controller = (Controller) params[1];
-		voisins = new ArrayList<>();
-		connaissance = new HashMap<>();
-		directGeneral = new double[2];
-		directGeneral[0] = 0;
-		directGeneral[1] = 0;
-		degreChangement = 0;
-		actionPassive = Action.SE_DEPLACER;
-		currentAction = Action.SE_DEPLACER;
-		super.onInitialization();
-		tps = System.currentTimeMillis();
-	}
+  /**
+   * GlobalCriticality is calculate from heterogeneity, isolation, stability.
+   */
+  private double globalCriticality;
 
-	// Constructeur. Un blob et un controller pour ce blob
-	public BlobAgent(MyAMAS amas, Blob b, Controller controller) {
-		super(amas, b, controller);
-	}
+  /**
+   * General direction calculate from pastDirection.
+   */
+  private double[] generalDirection;
 
-	// Getter sur l'environnement et les voisins genere.
-	@Override
-	protected void onPerceive() {
-		try {
-			getAmas().getEnvironment().generateNeighbours(this);
-		} catch (Exception e) {
-			ExceptionHandler eh = new ExceptionHandler();
-			eh.showError(e);
-		}
-	}
-
-	// Convertit les couleurs du format RGB a HSV
-	private double[] RGBToHSV(Color c) {
-		/* double[] trash = new double[3];
-		trash[0] = c.getRed();
-		trash[1] = c.getGreen();
-		trash[2] = c.getBlue();
-		return trash; */
-		// https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB
-		double max = Math.max(Math.max(c.getRed(), c.getGreen()), c.getBlue());
-		double min = Math.min(Math.min(c.getRed(), c.getGreen()), c.getBlue());
-		double[] hsv = new double[3];
-		if (c.getRed() == c.getBlue() && c.getBlue() == c.getGreen()) {
-			hsv[0] = 0.f;
-		} else if (max == c.getRed()) {
-			hsv[0] = 60.f * (c.getGreen() - c.getBlue()) / (max - min); 
-		} else if (max == c.getGreen()) {
-			hsv[0] = 60.f * (2.f + (c.getBlue() - c.getRed()) / (max - min));
-		} else {
-			hsv[0] = 60.f * (4.f + (c.getRed() - c.getGreen()) / (max - min));
-		}
-		if (hsv[0] < 0.f) hsv[0] += 360.f;
-		
-		if (max == 0.f) {
-			hsv[1] = 0.f;
-		} else {
-			hsv[1] = (max - min) / max;
-		}
-		
-		hsv[2] = max;
-		return hsv;
-	}
-
-	// fonction de calcul utilise en dessous pour passer les couleurs de HSV a RGB
-	private double auxil(double n, double[] hsv) {
-		double k = (n + hsv[0] / 60.f) % 6.f;
-		return hsv[2] - hsv[1] * hsv[2] * Math.max(Math.min(k, Math.min(4.f - k, 1.0)), 0.0);
-	}
-
-	// Fonction de conversion de couleur du format HSV a RGB
-	private Color HSVToRGB(double[] hsv) {
-	// Return new Color(hsv[0], hsv[1], hsv[2], 1.0);
-		return new Color(auxil(5.0, hsv), auxil(3.0, hsv), auxil(1.0, hsv), 1.0);
-	}
-
-	// Fonction de mise a jour de la couleur, la méthode implique de passer par le format HSV pour les calculs et stock en RGB
-	protected void updateColor() {
-		Color init = this.blob.getMaSuperCouleurPreferee();
-		double[] initHSV = RGBToHSV(init);
-		double[] cibleHSV = RGBToHSV(couleurCible);
-		double[] colHSV = new double[3];
-		double coef = 0.97;
-		double unmoinscoef = 1.0 - coef;
-		for (int i = 0; i < 3; i++) {
-			colHSV[i] = coef * initHSV[i] + unmoinscoef * cibleHSV[i];
-		}
-		Color nvColor = HSVToRGB(colHSV);
-		this.blob.setMaCouleur(nvColor);
-	}
-	/*
-	 * ***************************************************************************
-	 ********************************** ACTION ***********************************
-	 * ***************************************************************************
-	 * Utilise dans Migrants et Immaginaires
-	 *  */
-
-	// Permet a un blob de se suicider -> Etre enlever de l'environnement
-	protected void action_se_suicider() {
-		Log.debug("quela", "imag decide suicide");
-		try {
-			currentAction = Action.SE_SUICIDER;
-			getAmas().getEnvironment().removeAgent(this);
-//			getAmas().getController().remove_blobImmaginaire((Immaginaire)this);
-			destroy();
-		} catch (Exception e) {
-			ExceptionHandler eh = new ExceptionHandler();
-			eh.showError(e);
-		}
-	}
-
-	// Place un blob dans l'environnement
-	protected void action_creer() {
-		Log.debug("quela", "imag decide creer");
-		try {
-			currentAction = Action.CREER;
-			Log.debug("quela", "imag decide copy");
-			Blob newBlob = blob.copy_blob();
-			// newBlob.setCoordonnee(convert(newBlob.getCoordonnee()));
-			Log.debug("quela", "imag decide setcoord");
-			Log.debug("coord", "coord " + newBlob.getCoordonnee());
-
-			newBlob.setCoordonnee(
-					(getAmas().getEnvironment().nouvellesCoordonneesTT(this, 2, newBlob.getCoordonnee())));
-			Log.debug("quela", "imag decide newfils");
-			newFils = new Immaginaire(getAmas(), newBlob, controller);
-			Log.debug("quela", "imag decide addagent");
-			getAmas().getEnvironment().addAgent(newFils);
-		} catch (Exception e) {
-			ExceptionHandler eh = new ExceptionHandler();
-			eh.showError(e);
-		}
-
-	}
-
-//	private double[] convert(double[] nouvellesCoordonnees) {
-//		return new double[] {
-//				nouvellesCoordonnees[0]*12.5/50.0,
-//				nouvellesCoordonnees[1]*12.5/50.0
-//		};
-//	}
-
-	// Permet au blob de se déplacer en utilisant directGeneral et pastDirection
-	protected void action_se_deplacer(float delta) {
-		try {
-			double[] tmp = getAmas().getEnvironment().nouvellesCoordonnees(this, Math.random() * delta * 5.f,
-					pastDirection);
-			blob.setCoordonnee(tmp);
-			currentAction = Action.SE_DEPLACER;
-
-			directGeneral[0] = 0.6 * pastDirection[0] + 0.4 * directGeneral[0];
-			directGeneral[1] = 0.6 * pastDirection[1] + 0.4 * directGeneral[1];
-		} catch (Exception e) {
-			ExceptionHandler eh = new ExceptionHandler();
-			eh.showError(e);
-		}
-	}
-
-	// CHANGEMENT DE COULEUR .... Pour ne pas perdre les couleurs aquises par
-	// experience,
-	// je choisis de changer la couleur qui est la plus frequente parmi mes
-	// globules.
-	// action de changer de couleur en prenant une couleur aleatoire
-	protected void action_changerCouleur() {
-		// choix d'une nouvelle couleur
-		Color[] couleurListe = { Color.RED, Color.BLUE, Color.YELLOW, Color.AQUA, Color.GREEN,
-				Color.DARKORANGE, Color.BISQUE, Color.BLUEVIOLET, Color.DARKSALMON, Color.CYAN, Color.BURLYWOOD,
-				Color.CORAL };
-		int indiceCouleur = (int) (Math.random() * (couleurListe.length));
-		Color nvlleCouleur = couleurListe[indiceCouleur];
-		action_changerCouleur(nvlleCouleur);
-	}
-
-	// action de changer de couleur en prenant celle la plus presente dans
-	// l'environnement,
-	// laquelle est donnee en argument.
-	protected void action_changerCouleur(Color couleur) {
-		double r = getBlob().getMaSuperCouleurPreferee().getRed() - couleurCible.getRed();
-		double g = getBlob().getMaSuperCouleurPreferee().getGreen() - couleurCible.getGreen();
-		double b = getBlob().getMaSuperCouleurPreferee().getBlue() - couleurCible.getBlue();
-		if (Math.sqrt(r*r + g*g + b*b) >= 0.1) {
-			return;
-		}
-		try {
-			couleurCible = couleur;
-			nbChangements++;
-		} catch (Exception e) {
-			ExceptionHandler eh = new ExceptionHandler();
-			eh.showError(e);
-			// TODO : WAT
-		}
-	}
-
-	/*
-	 * ************************************************************************ *
-	 * **************************** CRITICALITY ******************************* *
-	 * ************************************************************************ *
-	 */
-
-	// Getter sur le critere isolement du blob
-	private double computeCriticalityIsolement() {
-		double res = 0;
-		try {
-			res = getAmas().getEnvironment().getIsolement() - voisins.size();
-		} catch (Exception e) {
-			ExceptionHandler eh = new ExceptionHandler();
-			eh.showError(e);
-		}
-		return (res);
-	}
-
-	// Fonction de calcul de la difference entre deux couleurs
-	private double colorDiff(Color c1, Color c2) {
-		double r = c1.getRed() - c2.getRed();
-		double g = c1.getGreen() - c2.getGreen();
-		double b = c1.getBlue() - c2.getBlue();
-		
-		return r*r + g*g + b*b;
-	}
-
-	// Renvoit le plus proche voisin de notre blob. Utilise dans Migrants / Immaginaire
-	protected Blob getPlusProcheVoisin() {
-		Blob b = null;
-		double dst = Double.POSITIVE_INFINITY;
-		for (int i = 0; i < voisins.size(); i++) {
-			BlobAgent v = voisins.get(i);
-			double x = blob.getCoordonnee()[0] - v.getBlob().getCoordonnee()[0];
-			double y = blob.getCoordonnee()[1] - v.getBlob().getCoordonnee()[1];
-			double d = Math.sqrt(x*x + y*y);
-			if (d < dst) {
-				dst = d;
-				b = v.getBlob();
-			}
-		}
-		return b;
-	}
-
-	// Getter sur le critere Heterogeneite
-	private double computeCriticalityHeterogeneite() {
-
-		int nbpareils = 0;
-		for (int i = 0; i < voisins.size(); i++) {
-			Color couleur = voisins.get(i).getBlob().getMaSuperCouleurPreferee();
-			if (colorDiff(couleur, blob.getMaSuperCouleurPreferee()) <= 0.1f) nbpareils++;
-		}
-		double nbVoisinsOptimal = ((100 - getAmas().getEnvironment().getHeterogeneite()) / 100) * voisins.size();
-		return nbpareils - nbVoisinsOptimal;
-	}
-
-	// Getter sur le critere Stabilite
-	protected double computeCriticalityStabilitePosition() {
-		// calcul du nombre de voisins qui "bougent".
-		// chaque voisin bouge ssi DirectGeneral > (eps,eps)
-		double nbBougent = 0;
-		for (int i = 0; i < voisins.size(); i++) {
-			if (Math.abs(voisins.get(i).getDirectGeneral()[0])
-					+ Math.abs(voisins.get(i).getDirectGeneral()[1]) > epsilon) // wtf??
-				nbBougent++;
-		}
-
-		// nb de voisins optimal qui devraient bouger, selon le curseur.
-		double nbOptimal = (getAmas().getEnvironment().getStabilite_position() / 100) * voisins.size();
-
-		if (nbBougent < nbOptimal)
-			return (nbOptimal - nbBougent);
-
-		// le problème, si trop de blobs bougent autour, je ne veux pas lever la
-		// criticité, afin d'espérer agir pour une autre criticité.
-		return (0);
-	}
-
-	/*
-	 * protected double computeCriticalityStabiliteEtat(){ // calcule de la moyenne
-	 * des changements effectu�s alentour: double moyenne = 0; for (int i = 0; i<
-	 * voisins.size(); i++){ moyenne += voisins.get(i).getNbChangements(); } moyenne
-	 * /= voisins.size();
-	 * 
-	 * //double res = fctCriticalityStabiliteEtat.compute(moyenneChangements -
-	 * moyenne); moyenneChangements = moyenne; return(res);
-	 * 
-	 * }
-	 */
-
-	// Renvoit la criticite generale calcule a partir des criteres du blob. Utilise dans Migrants / Immaginaire
-	protected double computeCriticalityInTideal() {
-
-		try {
-			criticite[Critere.Isolement.getValue()] = computeCriticalityIsolement();
-			criticite[Critere.Heterogeneite.getValue()] = computeCriticalityHeterogeneite();
-			criticite[Critere.Stabilite_etat.getValue()] = 0;
-			criticite[Critere.Stabilite_position.getValue()] = computeCriticalityStabilitePosition();
-
-			criticite_globale = criticite[Critere.Heterogeneite.getValue()] + criticite[Critere.Isolement.getValue()]
-					+ criticite[Critere.Stabilite_etat.getValue()] + criticite[Critere.Stabilite_position.getValue()];
-		} catch (Exception e) {
-			ExceptionHandler eh = new ExceptionHandler();
-			eh.showError(e);
-		}
-		return criticite_globale;
-	}
-
-	// retourne le critere qui a une plus grande criticite
-	protected Critere Most_critical_critere(double[] subjectCriticity) {
-		// return (Collections.max(criticite.entrySet(),
-		// Map.Entry.comparingByValue()).getKey());
-		double max_valeur = subjectCriticity[0];
-		int max_critere = 0;
-		for (int i = 0; i < subjectCriticity.length; i++)
-			if (Math.abs(max_valeur) < Math.abs(subjectCriticity[i])) {
-				max_valeur = subjectCriticity[i];
-				max_critere = i;
-			}
-		return Critere.valueOf(max_critere);
-	}
-
-	/* renvoie l'agent le plus critique parmi ses voisins, incluant lui-meme */
-	protected BlobAgent getMoreCriticalAgent() {
-		Iterator<BlobAgent> itr = voisins.iterator();
-		double criticiteMax = criticite_globale;
-		BlobAgent res = this;
-		while (itr.hasNext()) {
-			BlobAgent blobagent = itr.next();
-			if (blobagent.criticite_globale > criticiteMax) {
-				criticiteMax = blobagent.criticite_globale;
-				res = blobagent;
-			}
-		}
-		return (res);
-	}
+  /**
+   * Get incremented each time the blob change color.
+   */
+  private double numberOfChange;
 
 
-	/*
-	 * ***********************************************************************
-	 * ************************** GETTER / SETTER ****************************
-	 * ***********************************************************************
-	 */
+  /**
+   * Representation of the controller.
+   */
+  private Controller controller;
 
-	public Blob getBlob() {
-		return blob;
-	}
+  /**
+   * Current color of a blob.
+   */
+  private Color currentColor;
 
-	public void setBlob(Blob blob) {
-		this.blob = blob;
-	}
+  /**
+   * Time spend between two action.
+   */
+  private long tps;
 
-	public void addVoisin(BlobAgent blobToAdd) {
-		this.voisins.add(blobToAdd);
-	}
 
-	public double[] getCriticite() {
-		return criticite;
-	}
+  /**
+   * Initialized all attributes of the blob.
+   */
+  @Override
+  protected void onInitialization() {
+    this.blob = (Blob) params[0];
+    currentColor = this.blob.getMaSuperCouleurPreferee();
+    criticality = new double[Critere.FIN.getValue()];
+    for (int i = 0; i < Critere.FIN.getValue(); i++) {
+      criticality[i] = 0;
+    }
+    controller = (Controller) params[1];
+    neighbour = new ArrayList<>();
+    generalDirection = new double[2];
+    generalDirection[0] = 0;
+    generalDirection[1] = 0;
+    currentAction = Action.MOVE;
+    super.onInitialization();
+    tps = System.currentTimeMillis();
+  }
 
-	public void clearVoisin() {
-		this.voisins.clear();
-	}
+  /**
+   * ²
+   *
+   * @param amas
+   * @param b²
+   * @param pController
+   */
+  public BlobAgent(final MyAMAS amas, final Blob b,
+                   final Controller pController) {
+    super(amas, b, pController);
+  }
 
-	public ArrayList<BlobAgent> getVoisins() {
-		return voisins;
-	}
 
-	public double[] getPastDirection() {
-		return pastDirection;
-	}
+  /**
+   * Getter on the environment and on generated neighbour.
+   */
+  @Override
+  protected void onPerceive() {
+    try {
+      getAmas().getEnvironment().generateNeighbours(this);
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
+  }
 
-	public void setPastDirection(double[] pastDirection) {
-		this.pastDirection = pastDirection;
-	}
 
-	public double[] getDirectGeneral() {
-		return directGeneral;
-	}
+  /**
+   * Convert rgb color to hsv color.
+   *
+   * @param c
+   * @return a set of 3 value representing a color with hsv protocol.
+   * @see <a href="https://en.wikipedia.org/wiki/HSL_and_HSV#From_RGB">
+   * wikipedia: From rgb to hsv</a>
+   */
+  private double[] rgbToHsv(final Color c) {
+    // sixtyDegree, four and threeHundredAndSixty need a rename.
+    double max = Math.max(Math.max(c.getRed(), c.getGreen()), c.getBlue());
+    double min = Math.min(Math.min(c.getRed(), c.getGreen()), c.getBlue());
+    final int hsvSize = 3;
+    double[] hsv = new double[hsvSize];
+    final float sixtyDegree = 60.f;
+    if (c.getRed() == c.getBlue() && c.getBlue() == c.getGreen()) {
+      hsv[0] = 0.f;
+    } else if (max == c.getRed()) {
+      hsv[0] = sixtyDegree * (c.getGreen() - c.getBlue()) / (max - min);
+    } else if (max == c.getGreen()) {
+      hsv[0] = sixtyDegree * (2.f + (c.getBlue() - c.getRed()) / (max - min));
+    } else {
+      final float four = 4.f;
+      hsv[0] = sixtyDegree * (four + (c.getRed() - c.getGreen()) / (max - min));
+    }
+    if (hsv[0] < 0.f) {
+      final float threeHundredAndSixty = 360.f;
+      hsv[0] += threeHundredAndSixty;
+    }
 
-	public void setVoisins(ArrayList<BlobAgent> voisins) {
-		this.voisins = voisins;
+    if (max == 0.f) {
+      hsv[1] = 0.f;
+    } else {
+      hsv[1] = (max - min) / max;
+    }
 
-	}
+    hsv[2] = max;
+    return hsv;
+  }
 
-	public double getCriticite_globale() {
-		return criticite_globale;
-	}
+  /**
+   * used for hsvToRgb.
+   *
+   * @param n
+   * @param hsv
+   * @return a value for r, g, b or a (color).
+   */
+  private double auxil(final double n, final double[] hsv) {
+    final float sixty = 60.f;
+    final float six = 6.f;
+    final float four = 4.f;
+    double k = (n + hsv[0] / sixty) % six;
+    return hsv[2] - hsv[1] * hsv[2] * Math.max(
+        Math.min(k, Math.min(four - k, 1.0)), 0.0);
+  }
 
-	public void setCriticite_globale(int criticite_globale) {
-		this.criticite_globale = criticite_globale;
-	}
+  /**
+   * Convert hsv color to rgb color.
+   *
+   * @param hsv
+   * @return a rgb color.
+   */
+  private Color hsvToRgb(final double[] hsv) {
+    final float five = 5.f;
+    final float three = 3.f;
+    return new Color(auxil(five, hsv), auxil(three, hsv), auxil(1.0, hsv), 1.0);
+  }
 
-	public void setDirectGeneral(double[] directGeneral) {
-		this.directGeneral = directGeneral;
-	}
+  /**
+   * Update the color of the blob.
+   */
+  protected void updateColor() {
+    Color init = this.blob.getMaSuperCouleurPreferee();
+    double[] initHSV = rgbToHsv(init);
+    double[] targetHSV = rgbToHsv(currentColor);
+    final int three = 3;
+    double[] colHSV = new double[three];
+    final double coefficient = 0.97;
+    double oneMinusCoefficient = 1.0 - coefficient;
+    for (int i = 0; i < three; i++) {
+      colHSV[i] = coefficient * initHSV[i] + oneMinusCoefficient * targetHSV[i];
+    }
+    Color nvColor = hsvToRgb(colHSV);
+    this.blob.setMaSuperCouleurPreferee(nvColor);
+  }
+  /*
+   * ***************************************************************************
+   ********************************** ACTION ***********************************
+   * ***************************************************************************
+   *  */
 
-	public double getNbChangements() {
-		return nbChangements;
-	}
+  /**
+   * Remove the blob from the environment.
+   */
+  protected void actionRemove() {
+    try {
+      currentAction = Action.DELETE;
+      getAmas().getEnvironment().removeAgent(this);
+      destroy();
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
+  }
+
+  /**
+   * Add the blob on the environment.
+   */
+  protected void actionCreate() {
+    try {
+      currentAction = Action.CREATE;
+      Blob newBlob = blob.copy_blob();
+
+      newBlob.setCoordonnee(
+          (getAmas().getEnvironment().nouvellesCoordonneesTT(
+              this, 2, newBlob.getCoordonnee())));
+
+      Imaginary newSon = new Imaginary(getAmas(), newBlob, controller);
+      getAmas().getEnvironment().addAgent(newSon);
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
+  }
+
+  /**
+   * Movement of the blob.
+   *
+   * @param delta
+   */
+  protected void actionMove(final float delta) {
+    try {
+      final float five = 5.f;
+      double[] tmp = getAmas().getEnvironment().nouvellesCoordonnees(
+          this, Math.random() * delta * five, pastDirection);
+      blob.setCoordonnee(tmp);
+      currentAction = Action.MOVE;
+
+      final double six = 0.6;
+      final double four = 0.4;
+      generalDirection[0] = six * pastDirection[0] + four * generalDirection[0];
+      generalDirection[1] = six * pastDirection[1] + four * generalDirection[1];
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
+  }
+
+  /**
+   * Change the color of the blob by a random color.
+   */
+  protected void actionChangeColor() {
+    Color[] colourList = {Color.RED, Color.BLUE, Color.YELLOW, Color.AQUA,
+        Color.GREEN, Color.DARKORANGE, Color.BISQUE, Color.BLUEVIOLET,
+        Color.DARKSALMON, Color.CYAN, Color.BURLYWOOD, Color.CORAL};
+    int indicesColour = (int) (Math.random() * (colourList.length));
+    Color newColour = colourList[indicesColour];
+    actionChangeColor(newColour);
+  }
+
+  /**
+   * Changes the color of the blob by a given color.
+   * This color is changed according to the most present color.
+   *
+   * @param color
+   */
+  protected void actionChangeColor(final Color color) {
+    double r = getBlob().getMaSuperCouleurPreferee().getRed()
+        - currentColor.getRed();
+    double g = getBlob().getMaSuperCouleurPreferee().getGreen()
+        - currentColor.getGreen();
+    double b = getBlob().getMaSuperCouleurPreferee().getBlue()
+        - currentColor.getBlue();
+    final double zeroDecimalOne = 0.1;
+    if (Math.sqrt(r * r + g * g + b * b) >= zeroDecimalOne) {
+      return;
+    }
+    try {
+      currentColor = color;
+      numberOfChange++;
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
+  }
+
+  /*
+   * ************************************************************************ *
+   * **************************** CRITICALITY ******************************* *
+   * ************************************************************************ *
+   */
+
+  /**
+   * @return the isolation criterion of the blob
+   */
+  private double computeIsolationCriterion() {
+    double res = 0;
+    try {
+      res = getAmas().getEnvironment().getIsolation() - neighbour.size();
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
+    return (res);
+  }
+
+  /**
+   * @param c1
+   * @param c2
+   * @return difference between two colors
+   */
+  private double colorDiff(final Color c1, final Color c2) {
+    double r = c1.getRed() - c2.getRed();
+    double g = c1.getGreen() - c2.getGreen();
+    double b = c1.getBlue() - c2.getBlue();
+
+    return r * r + g * g + b * b;
+  }
+
+  /**
+   * @return the most close neighbour
+   */
+  protected Blob getClosestNeighbour() {
+    Blob b = null;
+    double dst = Double.POSITIVE_INFINITY;
+    for (BlobAgent v : neighbour) {
+      double x = blob.getCoordonnee()[0] - v.getBlob().getCoordonnee()[0];
+      double y = blob.getCoordonnee()[1] - v.getBlob().getCoordonnee()[1];
+      double d = Math.sqrt(x * x + y * y);
+      if (d < dst) {
+        dst = d;
+        b = v.getBlob();
+      }
+    }
+    return b;
+  }
+
+  /**
+   * @return the heterogeneity criterion
+   */
+  private double computeHeterogeneityCriterion() {
+
+    int nbpareils = 0;
+    for (BlobAgent blobAgent : neighbour) {
+      Color colour = blobAgent.getBlob().getMaSuperCouleurPreferee();
+      final float one = 0.1f;
+      if (colorDiff(colour, blob.getMaSuperCouleurPreferee()) <= one) {
+        nbpareils++;
+      }
+    }
+    final int hundred = 100;
+    double nbVoisinsOptimal = ((hundred - getAmas().getEnvironment().
+        getHeterogeneity()) / hundred) * neighbour.size();
+    return nbpareils - nbVoisinsOptimal;
+  }
+
+  /**
+   * @return the stability criterion
+   */
+  protected double computeStabilityCriterion() {
+    double nbBougent = 0;
+    for (BlobAgent blobAgent : neighbour) {
+      double epsilon = 0.05;
+      if (Math.abs(blobAgent.getGeneralDirection()[0])
+          + Math.abs(blobAgent.getGeneralDirection()[1]) > epsilon) {
+        nbBougent++;
+      }
+    }
+
+    // nb de voisins optimal qui devraient bouger, selon le curseur.
+    final int hundred = 100;
+    double nbOptimal = (getAmas().getEnvironment()
+        .getStability() / hundred) * neighbour.size();
+
+    if (nbBougent < nbOptimal) {
+      return (nbOptimal - nbBougent);
+    }
+
+    // le problème, si trop de blobs bougent autour, je ne veux pas lever la
+    // criticité, afin d'espérer agir pour une autre criticité.
+    return (0);
+  }
+
+  /**
+   * @return global criticality
+   */
+  protected double computeGlobalCriticality() {
+
+    try {
+      criticality[Critere.Isolement.getValue()]
+          = computeIsolationCriterion();
+      criticality[Critere.Heterogeneite.getValue()]
+          = computeHeterogeneityCriterion();
+      criticality[Critere.Stabilite_etat.getValue()]
+          = 0;
+      criticality[Critere.Stabilite_position.getValue()]
+          = computeStabilityCriterion();
+
+      globalCriticality = criticality[Critere.Heterogeneite.getValue()]
+          + criticality[Critere.Isolement.getValue()]
+          + criticality[Critere.Stabilite_etat.getValue()]
+          + criticality[Critere.Stabilite_position.getValue()];
+    } catch (Exception e) {
+      ExceptionHandler eh = new ExceptionHandler();
+      eh.showError(e);
+    }
+    return globalCriticality;
+  }
+
+  /**
+   * @param subjectCriticality
+   * @return the most critical criterion
+   */
+  protected Critere mostCriticalCriterion(final double[] subjectCriticality) {
+    double maxValeur = subjectCriticality[0];
+    int maxCritere = 0;
+    for (int i = 0; i < subjectCriticality.length; i++) {
+      if (Math.abs(maxValeur) < Math.abs(subjectCriticality[i])) {
+        maxValeur = subjectCriticality[i];
+        maxCritere = i;
+      }
+    }
+    return Critere.valueOf(maxCritere);
+  }
+
+  /**
+   * @return the most critical neighbour
+   */
+  protected BlobAgent getMostCriticalNeighbour() {
+    Iterator<BlobAgent> itr = neighbour.iterator();
+    double criticiteMax = globalCriticality;
+    BlobAgent res = this;
+    while (itr.hasNext()) {
+      BlobAgent blobagent = itr.next();
+      if (blobagent.globalCriticality > criticiteMax) {
+        criticiteMax = blobagent.globalCriticality;
+        res = blobagent;
+      }
+    }
+    return (res);
+  }
+
+
+  /*
+   * ***********************************************************************
+   * ************************** GETTER / SETTER ****************************
+   * ***********************************************************************
+   */
+
+  /**
+   * @return controller
+   */
+  public Controller getController() {
+    return controller;
+  }
+
+  /**
+   * @return tps
+   */
+  public long getTps() {
+    return tps;
+  }
+
+  /**
+   * @param pTps
+   */
+  public void setTps(final long pTps) {
+    this.tps = pTps;
+  }
+
+  /**
+   * @param pNumberOfChange
+   */
+  public void setNumberOfChange(final double pNumberOfChange) {
+    this.numberOfChange = pNumberOfChange;
+  }
+
+  /**
+   * @return currentAction
+   */
+  @Deprecated
+  public Action getCurrentAction() {
+    return currentAction;
+  }
+
+  /**
+   * @param pCurrentAction
+   */
+  public void setCurrentAction(final Action pCurrentAction) {
+    this.currentAction = pCurrentAction;
+  }
+
+  /**
+   * @return blob
+   */
+  public Blob getBlob() {
+    return blob;
+  }
+
+  /**
+   * @param pBlob
+   */
+  public void setBlob(final Blob pBlob) {
+    this.blob = pBlob;
+  }
+
+  /**
+   * @param blobToAdd
+   */
+  public void addNeighbour(final BlobAgent blobToAdd) {
+    this.neighbour.add(blobToAdd);
+  }
+
+  /**
+   * @return criticality
+   */
+  public double[] getCriticality() {
+    return criticality;
+  }
+
+  /**
+   * clear neighbour.
+   */
+  public void clearNeighbour() {
+    this.neighbour.clear();
+  }
+
+  /**
+   * @return a set of neighbour
+   */
+  public ArrayList<BlobAgent> getNeighbour() {
+    return neighbour;
+  }
+
+  /**
+   * @return the old direction
+   */
+  public double[] getPastDirection() {
+    return pastDirection;
+  }
+
+  /**
+   * @param pPastDirection
+   */
+  public void setPastDirection(final double[] pPastDirection) {
+    this.pastDirection = pPastDirection;
+  }
+
+  /**
+   * @return the general direction
+   */
+  public double[] getGeneralDirection() {
+    return generalDirection;
+  }
+
+  /**
+   * @param pNeighbour
+   */
+  @Deprecated
+  public void setNeighbour(final ArrayList<BlobAgent> pNeighbour) {
+    this.neighbour = pNeighbour;
+
+  }
+
+  /**
+   * @return global criticality
+   */
+  @Deprecated
+  public double getGlobalCriticality() {
+    return globalCriticality;
+  }
+
+  /**
+   * @param pGlobalCriticality
+   */
+  @Deprecated
+  public void setGlobalCriticality(final int pGlobalCriticality) {
+    this.globalCriticality = pGlobalCriticality;
+  }
+
+  /**
+   * @param pGeneralDirection
+   */
+  @Deprecated
+  public void setGeneralDirection(final double[] pGeneralDirection) {
+    this.generalDirection = pGeneralDirection;
+  }
+
+  /**
+   * @return number of change
+   */
+  @Deprecated
+  public double getNumberOfChange() {
+    return numberOfChange;
+  }
 
 }
