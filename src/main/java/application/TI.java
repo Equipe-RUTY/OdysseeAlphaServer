@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import com.jogamp.opengl.awt.GLJPanel;
 
 import amak.BlobAgent;
-import amak.Immaginaire;
 import amak.MyEnvironment;
 import business.Blob;
 

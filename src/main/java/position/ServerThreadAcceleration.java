@@ -16,8 +16,8 @@ import amak.MyAMAS;
 // https://gfx.developpez.com/tutoriel/java/network/#L4
 
 
-// permet de lancer un thread pour établir la connexion
-// et récolter les données en temps réel
+// permet de lancer un thread pour ï¿½tablir la connexion
+// et rï¿½colter les donnï¿½es en temps rï¿½el
 // pour les transmettres aux environnements correspondants
 
 
@@ -56,7 +56,7 @@ public class ServerThreadAcceleration extends Thread{
 		running = true;
 		while (running) {
 			try {
-				System.out.println("j'écoute");
+				System.out.println("j'ï¿½coute");
 				final Socket clientSocket = socket.accept();
 				System.out.println("Je viens d'entendre qqn");
 				new ConnectedClientAcceleration(clientSocket, this);
@@ -80,13 +80,13 @@ public class ServerThreadAcceleration extends Thread{
 			//lock.unlock();
 			return null;
 		}
-		migrant.t0_to_tr(coo);
+		migrant.t0ToTr(coo);
 		return migrant;
 	}
 	
 	public void rentrerBlob(Migrant b){
 		System.out.println("hehehehehe");
-		b.tr_to_t0();	
+		b.trToT0();
 	}
 	
 	public void moveBlob(Migrant b, double[] coo){
