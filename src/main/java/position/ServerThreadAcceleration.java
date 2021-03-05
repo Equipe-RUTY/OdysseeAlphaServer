@@ -1,96 +1,109 @@
 package position;
-import java.io.IOException;	
+
+import java.io.IOException;
 
 //import java.util.Map;
 //import java.util.TreeMap;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+
 //import amak.BlobAgent;
 import amak.Migrant;
 import amak.MyAMAS;
 
-//https://openclassrooms.com/courses/java-et-la-programmation-reseau/les-sockets-cote-serveur
-// https://gfx.developpez.com/tutoriel/java/network/
-
-// https://gfx.developpez.com/tutoriel/java/network/#L4
-
-
-// permet de lancer un thread pour établir la connexion
-// et récolter les données en temps réel
-// pour les transmettres aux environnements correspondants
+/* https://openclassrooms.com/courses/java-et-
+ la-programmation-reseau/les-sockets-cote-serveur
+https://gfx.developpez.com/tutoriel/java/network/
+https://gfx.developpez.com/tutoriel/java/network/#L4
 
 
+permet de lancer un thread pour etablir la connexion
+et recolter les donnees en temps reel
+pour les transmettres aux environnements correspondants */
 
-
-public class ServerThreadAcceleration extends Thread{
-
+/**
+ *PositionSimulationThread est la classe permettant.
+ * de simuler la vie des blobs
+ * @author inconnu, busca
+ * @version 1.0
+ * @see Thread la classe PositionSimulationThread en heritant
+ */
+public class ServerThreadAcceleration extends Thread {
+	/**
+	 * L'envrionnement.
+	 * @see MyAMAS
+	 */
 	private MyAMAS tAmas;
-			
+	/**
+	 * Socket du serveur.
+	 */
 	private ServerSocket socket;
+	/**
+	 * Boolean servant d'etat du serveur.
+	 */
 	private boolean running = false;
-	
-	private static int serverPort = 8100;
-	
-	
-	
+	/**
+	 * Port du serveur.
+	 */
+	private final int serverPort = 8100;
 
-	public ServerThreadAcceleration(MyAMAS tAmas) {
-		//this(" - localhost:" + serverPort);
-		this.tAmas = tAmas;
-			//
-		
-		//blobHibernants = migrants;
-	//	blobActifs = new ArrayList<>();
-		
+	/**
+	 * Constructeur de l'environnement.
+	 * @param tAmasEntry Nouvelle valeur pour tAmas
+	 */
+	public ServerThreadAcceleration(final MyAMAS tAmasEntry) {
+		this.tAmas = tAmasEntry;
 	}
 
-	
-	
-	
+	/**
+	 * Permet pour chaque requete d’ouvrir.
+	 * une instance pour communiquer avec le
+	 * smartphone qui cherche a communiquer
+	 */
 	@Override
-	public void run() {
-
+	public final void run() {
 		try {
 			socket = new ServerSocket(serverPort);
 		running = true;
 		while (running) {
 			try {
-				System.out.println("j'écoute");
+				System.out.println("j'ecoute");
 				final Socket clientSocket = socket.accept();
 				System.out.println("Je viens d'entendre qqn");
-				new ConnectedClientAcceleration(clientSocket, this);
+				new ConnectedClientAcceleration(clientSocket,
+						this);
 			} catch (final IOException e) {
 				e.printStackTrace();
 			}
-
 		}
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 	}
-	
-	
-	
-	public Migrant adopterBlob(double[] coo) {
+
+	/**
+	 * Permet d'adopter un blob.
+	 * @param coo Les coordonnees auxquels le blob adopte va etre place
+	 * @return Le blob adopte, de type migrant
+	 * @see Migrant
+	 */
+	public Migrant adopterBlob(final double[] coo) {
 		Migrant migrant = tAmas.getEnvironment().adopter();
-		if(migrant==null)
-		{
-			//lock.unlock();
+		if (migrant == null) {
 			return null;
 		}
 		migrant.t0_to_tr(coo);
 		return migrant;
 	}
-	
-	public void rentrerBlob(Migrant b){
-		System.out.println("hehehehehe");
-		b.tr_to_t0();	
+
+	/**
+	 * Permet de bouger un blob.
+	 * @param migrant Le blob que l'on veut bouger
+	 * @param coo Les coordonnees auxquelles on desire placer le blob
+	 */
+	public void moveBlob(final Migrant migrant, final double[] coo) {
+		migrant.getBlob().setCoordonnee(coo);
 	}
-	
-	public void moveBlob(Migrant b, double[] coo){
-		b.getBlob().setCoordonnee(coo);
-	}    
 }
 
