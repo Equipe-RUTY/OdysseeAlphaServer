@@ -31,27 +31,27 @@ public class MyEnvironment extends Environment {
    * Valeur utilisé pour le calcul des voisins
    * (Distance max a laquelle se trouve un voisin).
    */
-  private final int radius = 7;
+  private static final int radius = 7;
 
   /**
    * Radius(meter) used to check if given coordinate seams ok.
    */
-  private final double rayonTerrain = 12.5;
+  private static final double rayonTerrain = 12.5;
 
   /**
    * Used to compute the isolation criterion.
    */
-  private final double isolation = 10;
+  private static final double isolation = 10;
 
   /**
    * Used to compute the stability criterion.
    */
-  private final double stability = 75;
+  private static final double stability = 75;
 
   /**
    * Used to compute the heterogeneity criterion.
    */
-  private final double heterogeneity = 50;
+  private static final double heterogeneity = 50;
 
   /**
    * Constructor.
@@ -215,6 +215,7 @@ public class MyEnvironment extends Environment {
    * @param coordinate
    * @return new coordinate
    */
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   public double[] nouvellesCoordonneesTT(
       final BlobAgent agent, final double step, final double[] coordinate) {
     double[] res = new double[2];

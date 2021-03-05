@@ -30,7 +30,7 @@ public class Migrant extends BlobAgent {
   /**
    * Rate for the riped.
    */
-  private final double tauxMurissement = 5;
+  private static final double tauxMurissement = 5;
   /**
    * Rate of "white" or blank.
    */
