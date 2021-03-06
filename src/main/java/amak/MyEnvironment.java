@@ -11,34 +11,40 @@ import fr.irit.smac.amak.Scheduling;
 import fr.irit.smac.amak.tools.Log;
 
 public class MyEnvironment extends Environment {
-	private ArrayList<BlobAgent> agents;
-	private ArrayList<Migrant> hibernants;
-	
 
-	
-	
-	private int radius = 7; // était à 7 dans un autre code copié collé.
+	// Liste des blobs adoptes
+	private ArrayList<BlobAgent> agents;
+	// Liste des blobs "en attentes"
+	private ArrayList<Migrant> hibernants;
+	// Valeur utilisé pour le calcul des voisins (Distance max a laquelle se trouve un voisin)
+	private int radius = 7;
+	// Utilise pour savoir si la coordonne est valide par rapport au terrain, exprime en metre
+	public double rayonTerrain = 12.5;
+	// Critere utilise dans blob agent pour le calcul de la criticalite
+	// Setter et getter dessus
 	private double isolement = 10;
+	// Setter et getter dessus
 	private double stabilite_position = 75;
+	// Setter et getter dessus
 	private double heterogeneite = 50;
-	public double rayonTerrain = 12.5; // exprim� en metres
 
 	public MyEnvironment(Controller controller) {
 		super(Scheduling.DEFAULT, controller);
 	}
 	
-	
+	// Fonction d'initialisation
 	@Override
 	public void onInitialization(){
 		agents = new ArrayList<BlobAgent>();
 		hibernants = new ArrayList<Migrant>();
 	}
 
-	
+	// Constructeur
 	public ArrayList<BlobAgent> getAgents() {
 		return agents;
 	}
 
+	// Pour construit la liste des voisins a partir de la liste des blobs en circulation ** TI
 	private void generateNeighboursTideal(BlobAgent subject){
 		for (int j = 0; j < agents.size(); j++ )
 		{
@@ -46,6 +52,8 @@ public class MyEnvironment extends Environment {
 				subject.addVoisin(agents.get(j));
 		}
 	}
+
+	// Construit les voisins pour la liste des blobs hibernants ** T0
 	private void generateNeighboursToriginel(BlobAgent subject){
 		for (int j = 0; j < hibernants.size(); j++ )
 		{
@@ -54,7 +62,7 @@ public class MyEnvironment extends Environment {
 		}
 	}
 	
-	
+	// Construit les voisins pour la liste des blobs actifs ** TR
 	public void generateNeighbours(BlobAgent subject){
 		subject.clearVoisin();
 		if( (subject instanceof Migrant) && ((Migrant)subject).isHome())
@@ -64,21 +72,14 @@ public class MyEnvironment extends Environment {
 	}
 
 
-	public ArrayList<Migrant> getHibernants() {
-		return hibernants;
-	}
-
-
-	//Cette fonction est appel�e par l'agent apr�s avoir fait le changement.
-	// il ne reste donc ici qu'� mettre � jour les listes dans l'environnement
+	// Fonction d'ajout d'un blob a la liste des blobs actifs
 	public void addAgent(BlobAgent agent) {
 		synchronized(agents) {			
 			agents.add(agent);
 		}
 	}
 
-	//Cette fonction est appel�e par l'agent apr�s avoir fait le changement.
-	// il ne reste donc ici qu'� mettre � jour les listes dans l'environnement
+	// Fonction de remove d'un blob de la liste des blobs actifs
 	public void removeAgent(BlobAgent agent) {
 		synchronized(agents) {			
 			agents.remove(agent);
@@ -99,7 +100,6 @@ public class MyEnvironment extends Environment {
 		synchronized(hibernants) {
 			hibernants.remove(migrant);
 		}
-		
 		synchronized(agents) {			
 			agents.add(migrant);
 		}
@@ -108,10 +108,9 @@ public class MyEnvironment extends Environment {
 	//Cette fonction est appel�e par l'agent apr�s avoir fait le changement.
 	// il ne reste donc ici qu'� mettre � jour les listes dans l'environnement
 	public void tr_to_t0(Migrant migrant){
-		synchronized(agents) {			
+		synchronized(agents) {
 			agents.remove(migrant);
 		}
-		
 		synchronized(hibernants) {			
 			hibernants.add(migrant);
 		}
@@ -125,11 +124,8 @@ public class MyEnvironment extends Environment {
 		
 		// si dans un carr� de 100*100
 		return  (0 < coo[0] && coo[0] < 100 && 0 < coo[1] && coo[1] < 100);
-			
-		
 		// si dans un cercle de diametre 100 ie de rayon 50
 //		return ((coo[0] - 50)*(coo[0] - 50) + (coo[1] - 50) * (coo[1] - 50) <= 50 * 50);
-
 	}
 	
 	// indique si la coordonn�e entr�e en param�tre est valide, ie si elle n'est pas hors terrain.
@@ -147,9 +143,6 @@ public class MyEnvironment extends Environment {
 	}
 	
 	
-	
-	
-	
 	// fonction qui � partir de coordonn�es initiales, propose de nouvelles coordonn�es � un certain rayon (le pas).
 		public double[] nouvellesCoordonneesTT(BlobAgent agent, double pas, double[] coordonnee){
 			double[] res = new double[2];
@@ -158,7 +151,6 @@ public class MyEnvironment extends Environment {
 			// Je mets le tout dans une boucle, et je relance l'al�atoire si je suis en dehors du terrain.
 			boolean isOK = false;
 			int count=0;
-			
 			
 			while(!isOK){
 				if (count++>1000) {
@@ -192,8 +184,7 @@ public class MyEnvironment extends Environment {
 			boolean isOK = false;
 			// Je dois prendre en compte les bordures. Je d�cide de ne pas compliquer les calculs : 
 			// Je mets le tout dans une boucle, et je relance l'al�atoire si je suis en dehors du terrain.
-			
-			
+
 			
 			if ( pastDirection != null && Math.random()*100 < 90)
 			{
@@ -221,16 +212,16 @@ public class MyEnvironment extends Environment {
 			//double[] nvlleDirection = new double[2];
 			
 			agent.setPastDirection(pastDirection);
-			
-			
+
 			return res;
 		}
 	
 
 	
 	/* *****************************************************************************************
-	 * *********************   getter / setter			****************************************
-	 * ************************************************************************************* * */
+	 * *****************************   getter / setter			********************************
+	 * *****************************************************************************************
+	 */
 	
 	public double getIsolement() {
 		return isolement;
@@ -261,6 +252,9 @@ public class MyEnvironment extends Environment {
 		System.out.println("la nouvelle valeur " + heterogeneite + " d'h�t�rog�n�it� a �t� prise en compte");
 	}
 
+	public ArrayList<Migrant> getHibernants() {
+		return hibernants;
+	}
 
 	public void setRadiusVoisins(double radiusVoisins) {
 		this.radius = (int)radiusVoisins;
@@ -272,6 +266,5 @@ public class MyEnvironment extends Environment {
 				return hibernants.get(i);
 		}
 		return null;
-		
 	}
 }

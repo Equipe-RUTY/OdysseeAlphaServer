@@ -10,9 +10,9 @@ public class Immaginaire extends BlobAgent {
 
 	public Immaginaire(MyAMAS amas, Blob b, Controller controller) {
 		super(amas, b, controller);
-
 	}
 
+	// Fait juste un appel a computeCriticalityInTideal.
 	@Override
 	protected double computeCriticality() {
 		return (computeCriticalityInTideal());
@@ -23,7 +23,6 @@ public class Immaginaire extends BlobAgent {
 		double[] tmp = getAmas().getEnvironment().nouvellesCoordonnees(this, Math.random() * delta * 3.0, pastDirection);
 		blob.setCoordonnee(tmp);
 		currentAction = Action.SE_DEPLACER;
-
 		directGeneral[0] = 0.6 * pastDirection[0] + 0.4 * directGeneral[0];
 		directGeneral[1] = 0.6 * pastDirection[1] + 0.4 * directGeneral[1];
 	}
