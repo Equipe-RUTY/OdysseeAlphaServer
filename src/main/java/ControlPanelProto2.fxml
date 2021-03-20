@@ -24,7 +24,7 @@
                            <children>
                               <SplitPane dividerPositions="0.500990099009901" layoutX="11.0" layoutY="35.0" prefHeight="229.0" prefWidth="516.0" styleClass="background" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                 <items>
-                                  <AnchorPane fx:id="panelTreel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onKeyPressed="#onKeyPressed" onKeyReleased="#onKeyPressed" onMouseClicked="#onClicTr" prefHeight="352.0" prefWidth="400.0" styleClass="background-blobs">
+                                  <AnchorPane fx:id="panelTreel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onKeyPressed="#onKeyPressed" onKeyReleased="#onKeyPressed" onMouseClicked="#onClickTR" prefHeight="352.0" prefWidth="400.0" styleClass="background-blobs">
                                        <children>
                                           <Label fx:id="labelAide" disable="true" layoutX="103.0" layoutY="80.0" lineSpacing="1.0" prefHeight="192.0" prefWidth="170.0" styleClass="background" text="déplacer : &#10;     flèches directionnelles&#10;sélectionner :&#10;     par clic&#10;déselectionner : &#10;      touche échap&#10;retour en To (Home) : &#10;      touche h&#10;" visible="false" wrapText="true">
                                              <font>
@@ -57,16 +57,16 @@
                                                    <children>
                                                       <SplitPane dividerPositions="0.3321318228630278, 0.6688980432543769" layoutX="-13.0" layoutY="229.0" prefHeight="112.0" prefWidth="647.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="229.0">
                                                          <items>
-                                                            <Slider fx:id="sdTaille" max="1000.0" min="100.0" onMouseDragged="#onChangeTaille" value="500.0" />
-                                                            <Slider fx:id="sdBlob" max="0.3" min="0.005" onMouseDragged="#onChangeBlobitude" value="0.1" />
+                                                            <Slider fx:id="sdTaille" max="1000.0" min="100.0" onMouseDragged="#onChangeSetRadius" value="500.0" />
+                                                            <Slider fx:id="sdBlob" max="0.3" min="0.005" onMouseDragged="#onChangeSetBlobbiness" value="0.1" />
                                                             <Slider />
                                                          </items></SplitPane>
                                                       <Label layoutX="287.0" layoutY="195.0" prefHeight="33.0" prefWidth="73.0" styleClass="label-dark" text="Blobitude" />
                                                       <Label layoutX="57.0" layoutY="195.0" prefHeight="33.0" prefWidth="73.0" styleClass="label-dark" text="Taille" />
-                                                      <Button fx:id="buttonSortirBlob" defaultButton="true" layoutX="81.0" layoutY="40.0" mnemonicParsing="false" onMouseClicked="#onClicButtonSortirBlob" text="Adoption Blob" textFill="#0d09f8" wrapText="true" />
+                                                      <Button fx:id="buttonSortirBlob" defaultButton="true" layoutX="81.0" layoutY="40.0" mnemonicParsing="false" onMouseClicked="#onClickPickABlob" text="Adoption Blob" textFill="#0d09f8" wrapText="true" />
                                                       <TextField fx:id="textFieldNbBlobs" layoutX="331.0" layoutY="35.0" prefHeight="37.0" prefWidth="124.0" />
                                                       <Label layoutX="338.0" layoutY="10.0" prefHeight="21.0" prefWidth="124.0" styleClass="label-dark" text="Nombre de Blobs :" textFill="#000000" underline="true" />
-                                                      <Button id="buttonOkNbBlobs" fx:id="buttonOKNbBlobs" defaultButton="true" layoutX="371.0" layoutY="79.0" mnemonicParsing="false" onMouseClicked="#onClicButtonOKnbBlobs" prefHeight="33.0" prefWidth="73.0" text="OK" textFill="#4e08ff" />
+                                                      <Button id="buttonOkNbBlobs" fx:id="buttonOKNbBlobs" defaultButton="true" layoutX="371.0" layoutY="79.0" mnemonicParsing="false" onMouseClicked="#onClickButtonOkNbBlobs" prefHeight="33.0" prefWidth="73.0" text="OK" textFill="#4e08ff" />
                                                    </children>
                                                 </AnchorPane>
                                             </items>
