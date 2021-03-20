@@ -233,8 +233,8 @@ public class Migrant extends BlobAgent {
 	}
 
 	public void selectionne() {
-		controller.deleteSelection();
-		controller.selectionne(this);
+		controller.unselect();
+		controller.select(this);
 	}
 
 	@Override
