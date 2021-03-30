@@ -34,7 +34,7 @@ Java 1.8 d'**Oracle** impérativement (créer un compte et [télécharger ici](h
 
 [BUSCA Yoan]() - MOE - [BuscaYoan](https://github.com/BuscaYoan)
 
-[Bousquet Théo]() - MOE - [BousquetTheo](https://github.com/BousquetTheo)
+[BOUSQUET Théo]() - MOE - [BousquetTheo](https://github.com/BousquetTheo)
 
 [EB-LEVADOUX Ugo](https://www.linkedin.com/in/ugo-eb-levadoux/) - MOE - [gogonouze](https://github.com/gogonouze)
 
