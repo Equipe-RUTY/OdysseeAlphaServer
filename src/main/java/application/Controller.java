@@ -114,10 +114,10 @@ public class Controller implements Initializable{
     @FXML
     void onClicButtonMouvementAleatoire(MouseEvent event) {
 
-    	if(!tSimuPosition.is_interrupt)
-    		tSimuPosition.interruption();
+    	if(!tSimuPosition.isInterrupted())
+    		tSimuPosition.end();
     	else
-    		tSimuPosition.demarrer();
+    		tSimuPosition.begin();
     	   	
     }
     

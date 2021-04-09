@@ -93,7 +93,7 @@ public class ServerThreadAcceleration extends Thread {
 		if (migrant == null) {
 			return null;
 		}
-		migrant.t0_to_tr(coo);
+		migrant.t0ToTr(coo);
 		return migrant;
 	}
 
