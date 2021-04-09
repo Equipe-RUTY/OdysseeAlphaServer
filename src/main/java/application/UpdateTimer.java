@@ -13,6 +13,6 @@ public class UpdateTimer extends AnimationTimer {
 	
 	@Override
 	public void handle(long now) {
-		control.updateVisiteurs();
+		control.updateVisitors();
 	}
 }
