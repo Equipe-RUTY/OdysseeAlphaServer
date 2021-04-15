@@ -215,7 +215,7 @@ public class MyEnvironment extends Environment {
    * @param coordinate
    * @return new coordinate
    */
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
+  //@edu.umd.cs.findbugs.annotations.SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   public double[] nouvellesCoordonneesTT(
       final BlobAgent agent, final double step, final double[] coordinate) {
     double[] res = new double[2];

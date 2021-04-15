@@ -34,7 +34,7 @@ import position.ServerThreadAcceleration;
 import javafx.fxml.Initializable;
 
 public class Controller implements Initializable{
-	
+
 	private boolean experience;
 	private Migrant blobToMove;
 	private PositionSimulationThread tSimuPosition;
@@ -45,7 +45,7 @@ public class Controller implements Initializable{
 	private T0 drawOriginelExp;
 	private TR drawReelExp;
 	private TI drawIdeelExp;
-	
+
 	//TODO
 //	private int radiusVoisin = 7;
 
@@ -62,55 +62,55 @@ public class Controller implements Initializable{
 
     @FXML
     private AnchorPane panelTreel;
-    
+
     @FXML
     private AnchorPane panelToriginel;
-    
+
     @FXML
     private AnchorPane panelBlobSelectione;
-    
+
     @FXML
     private Label labelAide;
-    
+
     @FXML
     private Button buttonSortirBlob;
-    
+
     @FXML
     private Button buttonChangerBlob;
-    
+
     @FXML
     private Button buttonOKNbBlobs;
-    
+
     @FXML
     private TextField textFieldNbBlobs;
-    
+
     @FXML
     private Pane paneAppercuBlob;
-    
+
     @FXML
     private Button buttonMouvementAleatoire;
-    
+
     @FXML
     private Slider sdTaille;
-    
+
     @FXML
     private Slider sdBlob;
-    
+
     private MyAMAS tAmas;
-    
+
 	//décalage fenêtre pour déplacer To et Ti
     private double xOffset = 0;
     private double yOffset = 0;
-    
 
-	
+
+
     @FXML
     void onClicButtonSortirBlob(MouseEvent event) {
     	// va sortir un Blob mur, pris au hasard dans To
     	Migrant migrant = tAmas.getEnvironment().adopter();
     	if (migrant != null) sortirBlob(migrant);
     }
-	
+
     @FXML
     void onClicButtonMouvementAleatoire(MouseEvent event) {
 
@@ -118,36 +118,36 @@ public class Controller implements Initializable{
     		tSimuPosition.end();
     	else
     		tSimuPosition.begin();
-    	   	
+
     }
-    
+
     @FXML
     void onKeyPressed(KeyEvent event) {
-    	
-    	
+
+
     	KeyCode kcode = event.getCode();
     	//System.out.println("je viens d'appuyer sur une touche !");
-    	
+
     	if (textFieldNbBlobs.getText().equals(""))
     	{
     		if (kcode.isDigitKey())
     			textFieldNbBlobs.setText(kcode.getName());
     		return;
     	}
-    		
-    		
-    	
-    	
-    	
+
+
+
+
+
     	if(blobToMove == null || experience)
     		return;
     	if(!tAmas.getEnvironment().getAgents().contains(blobToMove))
     		return;
-    	
+
     	if(kcode.isArrowKey())
     	{
     		double[] coo = blobToMove.getBlob().getCoordonnee().clone();
-    	
+
     		if (kcode.equals(KeyCode.UP))
     			coo[1] -= 1;
     		else if (kcode.equals(KeyCode.DOWN))
@@ -156,7 +156,7 @@ public class Controller implements Initializable{
     			coo[0] += 1;
     		else
     			coo[0] -= 1;
-    		
+
     		if(!isValideInTi(coo))
     			return;
     		moveBlob(blobToMove, coo);
@@ -169,36 +169,36 @@ public class Controller implements Initializable{
     	}
     	else if (kcode.equals(KeyCode.ESCAPE))
     		deleteSelection();
-    	
+
 
     }
-    
-    
+
+
     /* calcule la distance euclidienne entre 2 points cooA et cooB */
 	private double calculeDistance(double[] cooA, double[] cooB){
 		double sum = 0;
 		for(int i = 0; i < cooA.length ; i++)
 			sum += ((cooB[i] - cooA[i])*(cooB[i] - cooA[i]));
-		return Math.sqrt(sum);		
-		
+		return Math.sqrt(sum);
+
 	}
-    
-    
+
+
     @FXML
     void onClicTr(MouseEvent event) {
-    	
+
     	/* if (blobToMove != null)
     		deleteSelection();
-    	
-    	
+
+
     	// Trouvons les coordonnes du clic au niveau de Tr
     	double xcor = event.getSceneX();
     	double ycor = event.getSceneY();
     	System.out.println("on a cliqué sur les coordonnées : " + xcor + " ; " + ycor);
-    	
+
     	// la scene prend en compte le 1er xpanel. j'enlève donc sa largeur fixe de 500pxl
     	xcor -= 500;
-    	
+
     	// les coordonnees des Blobs sont exprimés en metres ... je transforme donc les pxls en metres.
     	double[] tmp = new double[2];
     	tmp[0] = xcor;
@@ -206,29 +206,29 @@ public class Controller implements Initializable{
     	tmp = treel.PxlTometre(tmp);
     	System.out.println("equivalent en metre à  : " + tmp[0] + " ; " + tmp[1]);
 
-    	
-    	
-    	
-    	
+
+
+
+
     	//deleteSelection();
-    	
+
     	// Trouvons le blob le plus proche de l'endroit cliqué.
-    	
+
     	List<Migrant> blobActifs = tAmas.getEnvironment().getAgents().stream()
     							  .filter(a -> a instanceof Migrant)
     							  .map(a -> (Migrant)a)
     							  .collect(Collectors.toList());
-    	
+
     	if(blobActifs.size() == 0)
     	{
     		System.out.println("Il n'y a rien a selectionner");
     		return;
     	}
-    	
+
     	blobToMove = blobActifs.get(0);
     	double distanceMin = calculeDistance(tmp, blobToMove.getBlob().getCoordonnee());
     	double distance;
-    	
+
     	for (int i = 0; i < blobActifs.size(); i++){
     		distance = calculeDistance(tmp, blobActifs.get(i).getBlob().getCoordonnee());
     		if(distance < distanceMin)
@@ -237,28 +237,28 @@ public class Controller implements Initializable{
     			blobToMove = blobActifs.get(i);
     		}
     	}
-    	
+
     	showSelection(); */
-    	
+
     }
-    
+
     public void selectionne(Migrant m) {
     	blobToMove = m;
     	apercu.setAgent(m);
     	showSelection();
     }
-    
+
 
     @FXML
     void onClicButtonOKnbBlobs(MouseEvent event) throws FileNotFoundException {
 		System.out.println(textFieldNbBlobs.textProperty().getValue());
 		int nbBlobs = Integer.parseInt(textFieldNbBlobs.textProperty().getValue());
-		
+
     	tAmas = new MyAMAS(new MyEnvironment(this), this, nbBlobs);
 
-		 
+
 		buttonOKNbBlobs.setDisable(true);
-		
+
 		if(!experience)
 		{
 			tSimuPosition = new PositionSimulationThread(tAmas);
@@ -273,7 +273,7 @@ public class Controller implements Initializable{
 			System.out.println("j'ai fini de traiter ce bouton");
 
 		}
-		
+
 		SwingNode swing = new SwingNode();
 		drawOriginel = new T0(new GLJPanel(), 100.f, 100.f, getAmas().getEnvironment());
 		swing.setContent(drawOriginel.getPanel());
@@ -282,7 +282,7 @@ public class Controller implements Initializable{
 		AnchorPane.setLeftAnchor(swing, 0.0);
 		AnchorPane.setRightAnchor(swing, 0.0);
 		panelToriginel.getChildren().add(swing);
-		
+
 		swing = new SwingNode();
 		drawReel = new TR(new GLJPanel(), 25.f, 25.f, getAmas().getEnvironment());
 		swing.setContent(drawReel.getPanel());
@@ -291,7 +291,7 @@ public class Controller implements Initializable{
 		AnchorPane.setLeftAnchor(swing, 0.0);
 		AnchorPane.setRightAnchor(swing, 0.0);
 		panelTreel.getChildren().add(swing);
-		
+
 		swing = new SwingNode();
 		drawIdeel = new TI(new GLJPanel(), 25.f, 25.f, getAmas().getEnvironment());
 		swing.setContent(drawIdeel.getPanel());
@@ -300,7 +300,7 @@ public class Controller implements Initializable{
 		AnchorPane.setLeftAnchor(swing, 0.0);
 		AnchorPane.setRightAnchor(swing, 0.0);
 		panelTideal.getChildren().add(swing);
-		
+
 		if (experience) {
 			drawOriginelExp = new T0(new GLJPanel(), 100.f, 100.f, getAmas().getEnvironment());
 			openInWindow("T0", drawOriginelExp);
@@ -321,7 +321,7 @@ public class Controller implements Initializable{
 		onChangeTaille();
 		onChangeBlobitude();
     }
-    
+
     private void openInWindow(String title, Terrain t) throws FileNotFoundException {
     	Stage window = new Stage();
     	window.setTitle(title);
@@ -339,12 +339,12 @@ public class Controller implements Initializable{
 		window.setScene(scene);
 		window.show();
     }
-    
+
 
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 	}
-    
+
 	public void configTerrain(Stage stage, Parent root)
 	{
 		root.setOnMousePressed(new EventHandler<MouseEvent>() {
@@ -354,7 +354,7 @@ public class Controller implements Initializable{
                 yOffset = event.getSceneY();
             }
         });
-		
+
 		root.setOnMouseDragged(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -363,19 +363,19 @@ public class Controller implements Initializable{
             }
         });
 	}
-	
+
 	public void initTO()
-	{	
+	{
 		/* Stage towindow = new Stage();
 
 		towindow.initStyle(StageStyle.UNDECORATED);
 
 		towindow.setTitle("Territoire Originel");
 		towindow.getIcons().add(new Image(Main.class.getResourceAsStream("icon_blob.png")));
-		
+
 		towindow.show(); */
 	}
-	
+
 	public void initTI()
 	{
 		/* Stage tiwindow = new Stage();
@@ -385,39 +385,39 @@ public class Controller implements Initializable{
 		tiwindow.getIcons().add(new Image(Main.class.getResourceAsStream("icon_blob.png")));
 		tiwindow.show(); */
 	}
-	
+
 	public void remove_blobMigrant(Migrant b){
 		if (b == blobToMove)
 			deleteSelection();
 	}
-	
+
 	public void setexperience(boolean experience) {
 		this.experience = experience;
 	}
-	
+
 	private void showSelection(){
 		// TODO refaire pour nouveau design
 	}
-	
+
 	public void deleteSelection(){
 		// TODO refaire pour nouveau design
 		blobToMove = null;
 	}
-	
-	
+
+
 	/* ***************************************************************************** *
 	 *  ******** 		METHODES DE POSITION_THREAD			************************ *
 	 *	**************************************************************************** */
-	
+
 	// indique si la coordonnée entrée en paramètre est valide, ie si elle n'est pas hors terrain.
-	// returne true if ok. 
+	// returne true if ok.
 	//Ici il s'agit de Tr ou Ti : valide si compris dans un cercle de rayon RayonTerrain et de centre (RayonTerrain;RayonTerrain)
 	private boolean isValideInTi(double[] coo){
 		if ((coo[0] - 12.5)*(coo[0] - 12.5) + (coo[1] - 12.5) * (coo[1] - 12.5) <= 12.5 * 12.5)
 			return true;
 		return false;
 	}
-		
+
 
 	// cette fonction n'est appelée que si nous sommes en mode test
 	public void sortirBlob(Migrant b){
@@ -430,12 +430,12 @@ public class Controller implements Initializable{
 			if ((coo[0] - 12.5)*(coo[0] - 12.5) + (coo[1] - 12.5) * (coo[1] - 12.5) <= 12.5 * 12.5)
 				isOk = true;
 		}
-		
+
 		tmp.setCoordonnee(coo);
 		b.setBlob(tmp);
 		b.t0ToTr();
 	}
-	
+
 	// cette fonction n'est appelée que si nous sommes en mode test
 	public void rentrerBlob(Migrant b){
 		System.out.println("je suis le 1 :" + b.getBlob().getMaSuperCouleurPreferee().toString());
@@ -444,7 +444,7 @@ public class Controller implements Initializable{
 		System.out.println("je suis le blob :" + b.getBlob().getMaSuperCouleurPreferee().toString());
 		b.trToT0();
 	}
-	
+
 	// cette fonction n'est appelée que si nous sommes en mode test
 	public void moveBlob(Migrant b, double[] coo){
 		b.getBlob().setCoordonnee(coo);
@@ -454,7 +454,7 @@ public class Controller implements Initializable{
 	public MyAMAS getAmas() {
 		return tAmas;
 	}
-	
+
 	public void updateRender() {
 		if (experience) {
 			if (drawOriginelExp != null) drawOriginelExp.getPanel().repaint();
@@ -467,7 +467,7 @@ public class Controller implements Initializable{
 			if (apercu != null) apercu.getPanel().repaint();
 		}
 	}
-	
+
 	@FXML
 	public void onChangeTaille() {
 		this.drawOriginel.setTaille((float)sdTaille.getValue());
@@ -480,7 +480,7 @@ public class Controller implements Initializable{
 			this.drawIdeelExp.setTaille((float)sdTaille.getValue());
 		}
 	}
-	
+
 	@FXML
 	public void onChangeBlobitude() {
 		this.drawOriginel.setBlobitude((float)sdBlob.getValue());
