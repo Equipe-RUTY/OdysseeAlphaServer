@@ -6,7 +6,7 @@ import java.util.Map;
 // Enum des critere 6 possibilites. Critere utilisé dans le package Amak
 
 public enum Critere {
-	Isolement(0), Stabilite_etat(1), Stabilite_position(2), Heterogeneite(3), Murissement(4), FIN(5);
+	Isolement(0), Stabilite_etat(1), Stabilite_position(2),Heterogeneite(3), Murissement(4), FIN(5);
 	private int value;
 	private static Map<Integer, Critere> map = new HashMap<>();
 	

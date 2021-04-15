@@ -30,7 +30,7 @@ public class Migrant extends BlobAgent {
   /**
    * Rate for the riped.
    */
-  private static final double tauxMurissement = 5;
+  private static final double TAUX_MURRISSEMENT = 5;
   /**
    * Rate of "white" or blank.
    */
@@ -69,7 +69,7 @@ public class Migrant extends BlobAgent {
    */
   private boolean mustRipe() {
     final int hundred = 100;
-    return (Math.random() * hundred < tauxMurissement);
+    return (Math.random() * hundred < TAUX_MURRISSEMENT);
   }
 
   /**
@@ -266,8 +266,8 @@ public class Migrant extends BlobAgent {
    * get new selection.
    */
   public void selectionne() {
-    getController().deleteSelection();
-    getController().selectionne(this);
+    getController().unselect();
+    getController().select(this);
   }
 
   /**

@@ -68,12 +68,12 @@ public class Visiteur extends Parent {
      * @param m
      * @param x
      * @param y
-     * @param rayonTerrain
+     * @param pRayonTerrain
      */
     public Visiteur(final VueExpo v, final Migrant m, final float x,
-                    final float y, final double rayonTerrain) {
+                    final float y, final double pRayonTerrain) {
         vueExpo = v;
-        this.rayonTerrain = rayonTerrain;
+        this.rayonTerrain = pRayonTerrain;
         circle = new Circle();
         circle.setCenterX(x);
         circle.setCenterY(y);
@@ -82,7 +82,7 @@ public class Visiteur extends Parent {
 
         migrant = m;
         if (migrant != null) {
-            migrant.t0_to_tr();
+            migrant.t0ToTr();
             updateMigrant();
         }
 
@@ -142,7 +142,7 @@ public class Visiteur extends Parent {
         if (migrant != null) {
             double[] coords = {circle.getCenterX() / 400.0 * rayonTerrain,
                     circle.getCenterY() / 210.0 * rayonTerrain};
-            if (migrant.getAmas().getEnvironment().isValideInTi(coords)) {
+            if (migrant.getAmas().getEnvironment().isValidInTi(coords)) {
                 migrant.getBlob().setCoordonnee(coords);
             }
         }

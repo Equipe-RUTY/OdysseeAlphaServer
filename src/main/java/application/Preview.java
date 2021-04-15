@@ -53,7 +53,7 @@ public class Preview extends Terrain {
     }
     res.add(new Blob(getSpaceWidth() / 2.f,
         getSpaceHeight() / 2.f, agent.getBlob().getMaSuperCouleurPreferee()));
-    for (BlobAgent v : agent.getVoisins()) {
+    for (BlobAgent v : agent.getNeighbour()) {
       if (v instanceof Migrant) {
         res.add(new Blob(v.getBlob()
             .getCoordonnee()[0] - agent.getBlob().getCoordonnee()[0]

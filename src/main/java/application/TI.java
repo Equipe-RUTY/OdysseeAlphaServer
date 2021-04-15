@@ -9,7 +9,8 @@ import amak.MyEnvironment;
 import business.Blob;
 
 /**
- * TI est la fenêtre qui représente [l'idéel](https://fr.wiktionary.org/wiki/id%C3%A9el).
+ * TI est la fenêtre qui représente [l'idéel]
+ * (https://fr.wiktionary.org/wiki/id%C3%A9el).
  *
  * @author inconnu, [ugo](https://github.com/gogonouze)
  * @version 1.0

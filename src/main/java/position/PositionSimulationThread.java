@@ -7,7 +7,6 @@ import java.util.TimerTask;
 import amak.BlobAgent;
 import amak.Migrant;
 import amak.MyAMAS;
-import com.sun.istack.internal.NotNull;
 
 /**
  * PositionSimulationThread est la classe permettant.

@@ -208,11 +208,10 @@ public class Controller implements Initializable {
   @Deprecated
   @FXML
   void onClickButtonRandomMouvement(final MouseEvent event) {
-
-    if (!tSimuPosition.is_interrupt) {
-      tSimuPosition.interruption();
+    if (!tSimuPosition.isInterrupted()) {
+      tSimuPosition.end();
     } else {
-      tSimuPosition.demarrer();
+      tSimuPosition.begin();
     }
 
   }
@@ -471,7 +470,7 @@ public class Controller implements Initializable {
 
     tmp.setCoordonnee(coo);
     b.setBlob(tmp);
-    b.t0_to_tr();
+    b.t0ToTr();
   }
 
   /**
@@ -488,7 +487,7 @@ public class Controller implements Initializable {
     }
     System.out.println("je suis le blob :"
         + b.getBlob().getMaSuperCouleurPreferee().toString());
-    b.tr_to_t0();
+    b.trToT0();
   }
 
   /**

@@ -31,27 +31,27 @@ public class MyEnvironment extends Environment {
    * Valeur utilisé pour le calcul des voisins
    * (Distance max a laquelle se trouve un voisin).
    */
-  private static final int radius = 7;
+  private static final int RADIUS = 7;
 
   /**
    * Radius(meter) used to check if given coordinate seams ok.
    */
-  private static final double rayonTerrain = 12.5;
+  private static final double RAYON_TERRAIN = 12.5;
 
   /**
    * Used to compute the isolation criterion.
    */
-  private static final double isolation = 10;
+  private static final double ISOLATION = 10;
 
   /**
    * Used to compute the stability criterion.
    */
-  private static final double stability = 75;
+  private static final double STABILITY = 75;
 
   /**
    * Used to compute the heterogeneity criterion.
    */
-  private static final double heterogeneity = 50;
+  private static final double HETEROGENEITY = 50;
 
   /**
    * Constructor.
@@ -87,7 +87,7 @@ public class MyEnvironment extends Environment {
   private void generateIdealNeighbours(final BlobAgent subject) {
     for (int j = 0; j < agents.size(); j++) {
       if (subject != agents.get(j) && subject.getBlob()
-          .isVoisin(agents.get(j).getBlob(), radius)) {
+          .isVoisin(agents.get(j).getBlob(), RADIUS)) {
         subject.addNeighbour(agents.get(j));
       }
     }
@@ -101,7 +101,7 @@ public class MyEnvironment extends Environment {
   private void generateNeighboursTOriginel(final BlobAgent subject) {
     for (int j = 0; j < hibernants.size(); j++) {
       if (subject != hibernants.get(j) && subject.getBlob()
-          .isVoisin(hibernants.get(j).getBlob(), 2 * radius)) {
+          .isVoisin(hibernants.get(j).getBlob(), 2 * RADIUS)) {
         subject.addNeighbour(hibernants.get(j));
       }
     }
@@ -204,8 +204,8 @@ public class MyEnvironment extends Environment {
    * @return True if ok else False
    */
   public boolean isValidInTi(final double[] coordinate) {
-    return (0 < coordinate[0] && coordinate[0] < 2 * rayonTerrain
-        && 0 < coordinate[1] && coordinate[1] < 2 * rayonTerrain);
+    return (0 < coordinate[0] && coordinate[0] < 2 * RAYON_TERRAIN
+        && 0 < coordinate[1] && coordinate[1] < 2 * RAYON_TERRAIN);
   }
 
 
@@ -327,19 +327,19 @@ public class MyEnvironment extends Environment {
    * @return isolation
    */
   public double getIsolation() {
-    return isolation;
+    return ISOLATION;
   }
   /**
    * @return stability
    */
   public double getStability() {
-    return stability;
+    return STABILITY;
   }
   /**
    * @return heterogeneity
    */
   public double getHeterogeneity() {
-    return heterogeneity;
+    return HETEROGENEITY;
   }
   /**
    * @return hibernants
@@ -364,6 +364,6 @@ public class MyEnvironment extends Environment {
    * @return rayonTerrain
    */
   public final double getRayonTerrain() {
-    return rayonTerrain;
+    return RAYON_TERRAIN;
   }
 }

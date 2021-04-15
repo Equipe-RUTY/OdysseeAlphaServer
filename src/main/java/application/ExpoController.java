@@ -111,10 +111,10 @@ public class ExpoController implements Initializable {
      * Méthode permettant de modifier le controller
      * de l'ExpoController.
      *
-     * @param controller
+     * @param pController
      */
-    public void setControl(final Controller controller) {
-        this.controller = controller;
+    public void setControl(final Controller pController) {
+        this.controller = pController;
     }
 
     /**

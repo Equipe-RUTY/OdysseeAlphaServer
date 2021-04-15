@@ -119,10 +119,10 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
   }
 
   /**
-   * ²
+   *
    *
    * @param amas
-   * @param b²
+   * @param b
    * @param pController
    */
   public BlobAgent(final MyAMAS amas, final Blob b,
@@ -407,7 +407,7 @@ public abstract class BlobAgent extends Agent<MyAMAS, MyEnvironment> {
   protected double computeStabilityCriterion() {
     double nbBougent = 0;
     for (BlobAgent blobAgent : neighbour) {
-      double epsilon = 0.05;
+      final double epsilon = 0.05;
       if (Math.abs(blobAgent.getGeneralDirection()[0])
           + Math.abs(blobAgent.getGeneralDirection()[1]) > epsilon) {
         nbBougent++;
