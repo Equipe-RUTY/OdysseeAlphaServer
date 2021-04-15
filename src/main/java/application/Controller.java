@@ -13,9 +13,7 @@ import amak.MyAMAS;
 import amak.MyEnvironment;
 import business.Blob;
 import javafx.embed.swing.SwingNode;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -33,474 +31,541 @@ import position.PositionSimulationThread;
 import position.ServerThreadAcceleration;
 import javafx.fxml.Initializable;
 
-public class Controller implements Initializable{
+/**
+ * Controller est l'interface qui permet d'observer les différents terrains
+ * et de modifier certaines caractéristiques.
+ *
+ * @author inconnu, [ugo](https://github.com/gogonouze)
+ * @version 1.0
+ * @see Initializable
+ */
+public class Controller implements Initializable {
 
-	private boolean experience;
-	private Migrant blobToMove;
-	private PositionSimulationThread tSimuPosition;
-	private T0 drawOriginel;
-	private TR drawReel;
-	private TI drawIdeel;
-	private Apercu apercu;
-	private T0 drawOriginelExp;
-	private TR drawReelExp;
-	private TI drawIdeelExp;
+  /**
+   * Indique si il s'agit du mode "test" ou "experience".
+   */
+  private boolean experience;
+  /**
+   * Prochain blob à faire bouger.
+   */
+  private Migrant blobToMove;
+  /**
+   * Serveur qui récupère les données des utilisateurs smartphone.
+   */
+  private PositionSimulationThread tSimuPosition;
+  /**
+   * Fenêtre qui affiche T0 dans le controleur.
+   */
+  private T0 drawOriginel;
+  /**
+   * Fenêtre qui affiche TR dans le controleur.
+   */
+  private TR drawReel;
+  /**
+   * Fenêtre qui affiche TI dans le controleur.
+   */
+  private TI drawIdeel;
+  /**
+   * Fenêtre qui affiche l'aperçu dans le controleur.
+   */
+  private Preview preview;
+  /**
+   * Fenêtre qui affiche T0.
+   */
+  private T0 drawOriginelExp;
+  /**
+   * Fenêtre qui affiche TR.
+   */
+  private TR drawReelExp;
+  /**
+   * Fenêtre qui affiche TI.
+   */
+  private TI drawIdeelExp;
 
-	//TODO
-//	private int radiusVoisin = 7;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private TableView<?> testtableview;
 
-    @FXML
-    private TableView<?> testtableview;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private Label AffichDiso;
 
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private AnchorPane panelTideal;
 
-    @FXML
-    private Label AffichDiso;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private AnchorPane panelTreel;
 
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private AnchorPane panelToriginel;
 
-    @FXML
-    private AnchorPane panelTideal;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private AnchorPane panelBlobSelectione;
 
-    @FXML
-    private AnchorPane panelTreel;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private Label labelAide;
 
-    @FXML
-    private AnchorPane panelToriginel;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private Button buttonSortirBlob;
 
-    @FXML
-    private AnchorPane panelBlobSelectione;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private Button buttonChangerBlob;
 
-    @FXML
-    private Label labelAide;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private Button buttonOKNbBlobs;
 
-    @FXML
-    private Button buttonSortirBlob;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private TextField textFieldNbBlobs;
 
-    @FXML
-    private Button buttonChangerBlob;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private Pane paneAppercuBlob;
 
-    @FXML
-    private Button buttonOKNbBlobs;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private Button buttonMouvementAleatoire;
 
-    @FXML
-    private TextField textFieldNbBlobs;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private Slider sdTaille;
 
-    @FXML
-    private Pane paneAppercuBlob;
+  /**
+   * Composant graphique.
+   */
+  @FXML
+  private Slider sdBlob;
 
-    @FXML
-    private Button buttonMouvementAleatoire;
+  /**
+   * Gestion de l'environnement des Blobs.
+   */
+  private MyAMAS tAmas;
 
-    @FXML
-    private Slider sdTaille;
+  /**
+   * Décalage graphique en x.
+   */
+  private double xOffset = 0;
+  /**
+   * Décalage graphique en y.
+   */
+  private double yOffset = 0;
 
-    @FXML
-    private Slider sdBlob;
+  /**
+   * Fait passer un blob de T0 vers TR.
+   *
+   * @param event sur un clique.
+   */
+  @FXML
+  void onClickPickABlob(final MouseEvent event) {
+    // va sortir un Blob mur, pris au hasard dans To
+    Migrant migrant = tAmas.getEnvironment().adopter();
+    if (migrant != null) {
+      pullOutBlob(migrant);
+    }
+  }
 
-    private MyAMAS tAmas;
+  /**
+   * Fait bouger aléatoirement les blobs.
+   *
+   * @param event
+   */
+  @Deprecated
+  @FXML
+  void onClickButtonRandomMouvement(final MouseEvent event) {
 
-	//décalage fenêtre pour déplacer To et Ti
-    private double xOffset = 0;
-    private double yOffset = 0;
-
-
-
-    @FXML
-    void onClicButtonSortirBlob(MouseEvent event) {
-    	// va sortir un Blob mur, pris au hasard dans To
-    	Migrant migrant = tAmas.getEnvironment().adopter();
-    	if (migrant != null) sortirBlob(migrant);
+    if (!tSimuPosition.is_interrupt) {
+      tSimuPosition.interruption();
+    } else {
+      tSimuPosition.demarrer();
     }
 
-    @FXML
-    void onClicButtonMouvementAleatoire(MouseEvent event) {
+  }
 
-    	if(!tSimuPosition.isInterrupted())
-    		tSimuPosition.end();
-    	else
-    		tSimuPosition.begin();
+  /**
+   * Permet de gerer les actions clavier.
+   *
+   * @param event touche appuyé.
+   */
+  @FXML
+  void onKeyPressed(final KeyEvent event) {
+    KeyCode kcode = event.getCode();
 
+    if (textFieldNbBlobs.getText().equals("")) {
+      if (kcode.isDigitKey()) {
+        textFieldNbBlobs.setText(kcode.getName());
+      }
+      return;
     }
 
-    @FXML
-    void onKeyPressed(KeyEvent event) {
-
-
-    	KeyCode kcode = event.getCode();
-    	//System.out.println("je viens d'appuyer sur une touche !");
-
-    	if (textFieldNbBlobs.getText().equals(""))
-    	{
-    		if (kcode.isDigitKey())
-    			textFieldNbBlobs.setText(kcode.getName());
-    		return;
-    	}
-
-
-
-
-
-    	if(blobToMove == null || experience)
-    		return;
-    	if(!tAmas.getEnvironment().getAgents().contains(blobToMove))
-    		return;
-
-    	if(kcode.isArrowKey())
-    	{
-    		double[] coo = blobToMove.getBlob().getCoordonnee().clone();
-
-    		if (kcode.equals(KeyCode.UP))
-    			coo[1] -= 1;
-    		else if (kcode.equals(KeyCode.DOWN))
-    			coo[1] += 1;
-    		else if (kcode.equals(KeyCode.RIGHT))
-    			coo[0] += 1;
-    		else
-    			coo[0] -= 1;
-
-    		if(!isValideInTi(coo))
-    			return;
-    		moveBlob(blobToMove, coo);
-    	}
-    	else if (kcode.isLetterKey())
-    	{
-    		Migrant tmp = blobToMove;
-    		deleteSelection();
-    		rentrerBlob(tmp);
-    	}
-    	else if (kcode.equals(KeyCode.ESCAPE))
-    		deleteSelection();
-
-
+    if (blobToMove == null || experience) {
+      return;
+    }
+    if (!tAmas.getEnvironment().getAgents().contains(blobToMove)) {
+      return;
     }
 
+    if (kcode.isArrowKey()) {
+      double[] coo = blobToMove.getBlob().getCoordonnee().clone();
 
-    /* calcule la distance euclidienne entre 2 points cooA et cooB */
-	private double calculeDistance(double[] cooA, double[] cooB){
-		double sum = 0;
-		for(int i = 0; i < cooA.length ; i++)
-			sum += ((cooB[i] - cooA[i])*(cooB[i] - cooA[i]));
-		return Math.sqrt(sum);
+      if (kcode.equals(KeyCode.UP)) {
+        coo[1] -= 1;
+      } else if (kcode.equals(KeyCode.DOWN)) {
+        coo[1] += 1;
+      } else if (kcode.equals(KeyCode.RIGHT)) {
+        coo[0] += 1;
+      } else {
+        coo[0] -= 1;
+      }
 
-	}
-
-
-    @FXML
-    void onClicTr(MouseEvent event) {
-
-    	/* if (blobToMove != null)
-    		deleteSelection();
-
-
-    	// Trouvons les coordonnes du clic au niveau de Tr
-    	double xcor = event.getSceneX();
-    	double ycor = event.getSceneY();
-    	System.out.println("on a cliqué sur les coordonnées : " + xcor + " ; " + ycor);
-
-    	// la scene prend en compte le 1er xpanel. j'enlève donc sa largeur fixe de 500pxl
-    	xcor -= 500;
-
-    	// les coordonnees des Blobs sont exprimés en metres ... je transforme donc les pxls en metres.
-    	double[] tmp = new double[2];
-    	tmp[0] = xcor;
-    	tmp[1] = ycor;
-    	tmp = treel.PxlTometre(tmp);
-    	System.out.println("equivalent en metre à  : " + tmp[0] + " ; " + tmp[1]);
-
-
-
-
-
-    	//deleteSelection();
-
-    	// Trouvons le blob le plus proche de l'endroit cliqué.
-
-    	List<Migrant> blobActifs = tAmas.getEnvironment().getAgents().stream()
-    							  .filter(a -> a instanceof Migrant)
-    							  .map(a -> (Migrant)a)
-    							  .collect(Collectors.toList());
-
-    	if(blobActifs.size() == 0)
-    	{
-    		System.out.println("Il n'y a rien a selectionner");
-    		return;
-    	}
-
-    	blobToMove = blobActifs.get(0);
-    	double distanceMin = calculeDistance(tmp, blobToMove.getBlob().getCoordonnee());
-    	double distance;
-
-    	for (int i = 0; i < blobActifs.size(); i++){
-    		distance = calculeDistance(tmp, blobActifs.get(i).getBlob().getCoordonnee());
-    		if(distance < distanceMin)
-    		{
-    			distanceMin = distance;
-    			blobToMove = blobActifs.get(i);
-    		}
-    	}
-
-    	showSelection(); */
-
-    }
-
-    public void selectionne(Migrant m) {
-    	blobToMove = m;
-    	apercu.setAgent(m);
-    	showSelection();
-    }
-
-
-    @FXML
-    void onClicButtonOKnbBlobs(MouseEvent event) throws FileNotFoundException {
-		System.out.println(textFieldNbBlobs.textProperty().getValue());
-		int nbBlobs = Integer.parseInt(textFieldNbBlobs.textProperty().getValue());
-
-    	tAmas = new MyAMAS(new MyEnvironment(this), this, nbBlobs);
-
-
-		buttonOKNbBlobs.setDisable(true);
-
-		if(!experience)
-		{
-			tSimuPosition = new PositionSimulationThread(tAmas);
-			tSimuPosition.start();
-		}
-		else
-		{
-			System.out.println("Je cree le serveur");
-			ServerThreadAcceleration server = new ServerThreadAcceleration(tAmas);
-			System.out.println("Je le run");
-			server.start();
-			System.out.println("j'ai fini de traiter ce bouton");
-
-		}
-
-		SwingNode swing = new SwingNode();
-		drawOriginel = new T0(new GLJPanel(), 100.f, 100.f, getAmas().getEnvironment());
-		swing.setContent(drawOriginel.getPanel());
-		AnchorPane.setTopAnchor(swing, 0.0);
-		AnchorPane.setBottomAnchor(swing, 0.0);
-		AnchorPane.setLeftAnchor(swing, 0.0);
-		AnchorPane.setRightAnchor(swing, 0.0);
-		panelToriginel.getChildren().add(swing);
-
-		swing = new SwingNode();
-		drawReel = new TR(new GLJPanel(), 25.f, 25.f, getAmas().getEnvironment());
-		swing.setContent(drawReel.getPanel());
-		AnchorPane.setTopAnchor(swing, 0.0);
-		AnchorPane.setBottomAnchor(swing, 0.0);
-		AnchorPane.setLeftAnchor(swing, 0.0);
-		AnchorPane.setRightAnchor(swing, 0.0);
-		panelTreel.getChildren().add(swing);
-
-		swing = new SwingNode();
-		drawIdeel = new TI(new GLJPanel(), 25.f, 25.f, getAmas().getEnvironment());
-		swing.setContent(drawIdeel.getPanel());
-		AnchorPane.setTopAnchor(swing, 0.0);
-		AnchorPane.setBottomAnchor(swing, 0.0);
-		AnchorPane.setLeftAnchor(swing, 0.0);
-		AnchorPane.setRightAnchor(swing, 0.0);
-		panelTideal.getChildren().add(swing);
-
-		if (experience) {
-			drawOriginelExp = new T0(new GLJPanel(), 100.f, 100.f, getAmas().getEnvironment());
-			openInWindow("T0", drawOriginelExp);
-			drawReelExp = new TR(new GLJPanel(), 25.f, 25.f, getAmas().getEnvironment());
-			openInWindow("TR", drawReelExp);
-			drawIdeelExp = new TI(new GLJPanel(), 25.f, 25.f, getAmas().getEnvironment());
-			openInWindow("TI", drawIdeelExp);
-		}
-		apercu = new Apercu(new GLJPanel(), 10.f, 10.f);
-		swing = new SwingNode();
-		swing.setContent(apercu.getPanel());
-		AnchorPane.setTopAnchor(swing, 0.0);
-		AnchorPane.setBottomAnchor(swing, 0.0);
-		AnchorPane.setLeftAnchor(swing, 0.0);
-		AnchorPane.setRightAnchor(swing, 0.0);
-		paneAppercuBlob.getChildren().add(swing);
-
-		onChangeTaille();
-		onChangeBlobitude();
-    }
-
-    private void openInWindow(String title, Terrain t) throws FileNotFoundException {
-    	Stage window = new Stage();
-    	window.setTitle(title);
-//    	window.initStyle(StageStyle.UNDECORATED);
-    	window.getIcons().add(new Image(new FileInputStream("src/main/java/application/icon_blob.png")));
-    	SwingNode swing = new SwingNode();
-    	swing.setContent(t.getPanel());
-    	AnchorPane.setTopAnchor(swing, 0.0);
-		AnchorPane.setBottomAnchor(swing, 0.0);
-		AnchorPane.setLeftAnchor(swing, 0.0);
-		AnchorPane.setRightAnchor(swing, 0.0);
-		AnchorPane pane = new AnchorPane();
-		pane.getChildren().add(swing);
-		Scene scene = new Scene(pane, 600, 600);
-		window.setScene(scene);
-		window.show();
+      if (!isValidInTI(coo)) {
+        return;
+      }
+      moveBlob(blobToMove, coo);
+    } else if (kcode.isLetterKey()) {
+      Migrant tmp = blobToMove;
+      unselect();
+      pushInBlob(tmp);
+    } else if (kcode.equals(KeyCode.ESCAPE)) {
+      unselect();
     }
 
 
-	@Override
-	public void initialize(URL arg0, ResourceBundle arg1) {
-	}
+  }
 
-	public void configTerrain(Stage stage, Parent root)
-	{
-		root.setOnMousePressed(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                xOffset = event.getSceneX();
-                yOffset = event.getSceneY();
-            }
-        });
+  /**
+   * @param event
+   */
+  @Deprecated
+  @FXML
+  void onClickTR(final MouseEvent event) {
 
-		root.setOnMouseDragged(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-            	stage.setX(event.getScreenX() - xOffset);
-            	stage.setY(event.getScreenY() - yOffset);
-            }
-        });
-	}
+  }
 
-	public void initTO()
-	{
-		/* Stage towindow = new Stage();
+  /**
+   * Permet de selectionner un blob.
+   *
+   * @param m
+   */
+  public void select(final Migrant m) {
+    blobToMove = m;
+    preview.setAgent(m);
+  }
 
-		towindow.initStyle(StageStyle.UNDECORATED);
+  /**
+   * Permet d'ajouter un nombre de blobs donné et lancer le serveur.
+   * Permet en mode experience d'ouvrir des fenêtres suplémentaires.
+   *
+   * @param event
+   * @throws FileNotFoundException
+   */
+  @FXML
+  void onClickButtonOkNbBlobs(final MouseEvent event)
+      throws FileNotFoundException {
+    System.out.println(textFieldNbBlobs.textProperty().getValue());
+    int nbBlobs = Integer.parseInt(textFieldNbBlobs.textProperty().getValue());
 
-		towindow.setTitle("Territoire Originel");
-		towindow.getIcons().add(new Image(Main.class.getResourceAsStream("icon_blob.png")));
-
-		towindow.show(); */
-	}
-
-	public void initTI()
-	{
-		/* Stage tiwindow = new Stage();
-
-		tiwindow.initStyle(StageStyle.UNDECORATED);
-		tiwindow.setTitle("Territoire Ideal");
-		tiwindow.getIcons().add(new Image(Main.class.getResourceAsStream("icon_blob.png")));
-		tiwindow.show(); */
-	}
-
-	public void remove_blobMigrant(Migrant b){
-		if (b == blobToMove)
-			deleteSelection();
-	}
-
-	public void setexperience(boolean experience) {
-		this.experience = experience;
-	}
-
-	private void showSelection(){
-		// TODO refaire pour nouveau design
-	}
-
-	public void deleteSelection(){
-		// TODO refaire pour nouveau design
-		blobToMove = null;
-	}
+    tAmas = new MyAMAS(new MyEnvironment(this), this, nbBlobs);
 
 
-	/* ***************************************************************************** *
-	 *  ******** 		METHODES DE POSITION_THREAD			************************ *
-	 *	**************************************************************************** */
+    buttonOKNbBlobs.setDisable(true);
+    textFieldNbBlobs.setDisable(true);
 
-	// indique si la coordonnée entrée en paramètre est valide, ie si elle n'est pas hors terrain.
-	// returne true if ok.
-	//Ici il s'agit de Tr ou Ti : valide si compris dans un cercle de rayon RayonTerrain et de centre (RayonTerrain;RayonTerrain)
-	private boolean isValideInTi(double[] coo){
-		if ((coo[0] - 12.5)*(coo[0] - 12.5) + (coo[1] - 12.5) * (coo[1] - 12.5) <= 12.5 * 12.5)
-			return true;
-		return false;
-	}
+    if (!experience) {
+      tSimuPosition = new PositionSimulationThread(tAmas);
+      tSimuPosition.start();
+    } else {
+      System.out.println("Je cree le serveur");
+      ServerThreadAcceleration server = new ServerThreadAcceleration(tAmas);
+      System.out.println("Je le run");
+      server.start();
+      System.out.println("j'ai fini de traiter ce bouton");
+
+    }
+
+    SwingNode swing = new SwingNode();
+    drawOriginel = new T0(new GLJPanel(),
+        100.f, 100.f, getAmas().getEnvironment());
+    swing.setContent(drawOriginel.getPanel());
+    AnchorPane.setTopAnchor(swing, 0.0);
+    AnchorPane.setBottomAnchor(swing, 0.0);
+    AnchorPane.setLeftAnchor(swing, 0.0);
+    AnchorPane.setRightAnchor(swing, 0.0);
+    panelToriginel.getChildren().add(swing);
+
+    swing = new SwingNode();
+    drawReel = new TR(new GLJPanel(),
+        25.f, 25.f, getAmas().getEnvironment());
+    swing.setContent(drawReel.getPanel());
+    AnchorPane.setTopAnchor(swing, 0.0);
+    AnchorPane.setBottomAnchor(swing, 0.0);
+    AnchorPane.setLeftAnchor(swing, 0.0);
+    AnchorPane.setRightAnchor(swing, 0.0);
+    panelTreel.getChildren().add(swing);
+
+    swing = new SwingNode();
+    drawIdeel = new TI(new GLJPanel(),
+        25.f, 25.f, getAmas().getEnvironment());
+    swing.setContent(drawIdeel.getPanel());
+    AnchorPane.setTopAnchor(swing, 0.0);
+    AnchorPane.setBottomAnchor(swing, 0.0);
+    AnchorPane.setLeftAnchor(swing, 0.0);
+    AnchorPane.setRightAnchor(swing, 0.0);
+    panelTideal.getChildren().add(swing);
+
+    if (experience) {
+      drawOriginelExp = new T0(new GLJPanel(),
+          100.f, 100.f, getAmas().getEnvironment());
+      openInWindow("T0", drawOriginelExp);
+      drawReelExp = new TR(new GLJPanel(),
+          25.f, 25.f, getAmas().getEnvironment());
+      openInWindow("TR", drawReelExp);
+      drawIdeelExp = new TI(new GLJPanel(),
+          25.f, 25.f, getAmas().getEnvironment());
+      openInWindow("TI", drawIdeelExp);
+    }
+    preview = new Preview(new GLJPanel(), 10.f, 10.f);
+    swing = new SwingNode();
+    swing.setContent(preview.getPanel());
+    AnchorPane.setTopAnchor(swing, 0.0);
+    AnchorPane.setBottomAnchor(swing, 0.0);
+    AnchorPane.setLeftAnchor(swing, 0.0);
+    AnchorPane.setRightAnchor(swing, 0.0);
+    paneAppercuBlob.getChildren().add(swing);
+
+    onChangeSetRadius();
+    onChangeSetBlobbiness();
+  }
+
+  /**
+   * Permet d'ouvrir une nouvelle fenêtre avec son titre et son type.
+   *
+   * @param title titre de la fenêtre.
+   * @param t     type de la fenêtre.
+   * @throws FileNotFoundException
+   */
+  private void openInWindow(final String title, final Terrain t)
+      throws FileNotFoundException {
+    Stage window = new Stage();
+    window.setTitle(title);
+    window.getIcons().add(new Image(
+        new FileInputStream("src/main/java/application/icon_blob.png")));
+    SwingNode swing = new SwingNode();
+    swing.setContent(t.getPanel());
+    AnchorPane.setTopAnchor(swing, 0.0);
+    AnchorPane.setBottomAnchor(swing, 0.0);
+    AnchorPane.setLeftAnchor(swing, 0.0);
+    AnchorPane.setRightAnchor(swing, 0.0);
+    AnchorPane pane = new AnchorPane();
+    pane.getChildren().add(swing);
+    Scene scene = new Scene(pane, 600, 600);
+    window.setScene(scene);
+    window.show();
+  }
+
+  /**
+   * Necessaire pour l'interface Initializable.
+   *
+   * @param arg0 Necessaire pour l'interface Initializable.
+   * @param arg1 Necessaire pour l'interface Initializable.
+   */
+  @Override
+  public void initialize(final URL arg0, final ResourceBundle arg1) {
+  }
+
+  /**
+   * Initialise T0.
+   */
+  public void initTO() {
+  }
+
+  /**
+   * Initialise TI.
+   */
+  public void initTI() {
+  }
+
+  /**
+   * @param pExperience
+   */
+  public void setexperience(final boolean pExperience) {
+    this.experience = pExperience;
+  }
+
+  /**
+   * Deselectionne le blob actuellement selectionné.
+   */
+  public void unselect() {
+    blobToMove = null;
+  }
 
 
-	// cette fonction n'est appelée que si nous sommes en mode test
-	public void sortirBlob(Migrant b){
-		Blob tmp = b.getBlob();
-		double[] coo = new double[2];
-		coo[0] = Math.random() * 25;
-		boolean isOk = false;
-		while(!isOk){
-			coo[1] = Math.random() * 25;
-			if ((coo[0] - 12.5)*(coo[0] - 12.5) + (coo[1] - 12.5) * (coo[1] - 12.5) <= 12.5 * 12.5)
-				isOk = true;
-		}
+  /* **************************************************************** *
+   * ********   METHODES DE POSITION_THREAD      ******************** *
+   * **************************************************************** */
 
-		tmp.setCoordonnee(coo);
-		b.setBlob(tmp);
-		b.t0ToTr();
-	}
+  /**
+   * Verifie qu'une coordonnée se trouve dans une zone.
+   *
+   * @param coo coordonnée.
+   * @return True si les coordonnées sont valides.
+   */
+  private boolean isValidInTI(final double[] coo) {
+    final double maxX = 12.5;
+    final double maxY = 12.5;
+    return ((coo[0] - maxX) * (coo[0] - maxX) + (coo[1] - maxY)
+        * (coo[1] - maxY) <= maxX * maxY);
+  }
 
-	// cette fonction n'est appelée que si nous sommes en mode test
-	public void rentrerBlob(Migrant b){
-		System.out.println("je suis le 1 :" + b.getBlob().getMaSuperCouleurPreferee().toString());
-		if (b == blobToMove)
-			deleteSelection();
-		System.out.println("je suis le blob :" + b.getBlob().getMaSuperCouleurPreferee().toString());
-		b.trToT0();
-	}
 
-	// cette fonction n'est appelée que si nous sommes en mode test
-	public void moveBlob(Migrant b, double[] coo){
-		b.getBlob().setCoordonnee(coo);
+  /**
+   * Permet de retirer un blob donné de TR.
+   * Utile uniquement pour le mode test.
+   *
+   * @param b blob.
+   */
+  public void pullOutBlob(final Migrant b) {
+    Blob tmp = b.getBlob();
+    double[] coo = new double[2];
+    coo[0] = Math.random() * 25;
+    boolean isOk = false;
+    while (!isOk) {
+      coo[1] = Math.random() * 25;
+      isOk = isValidInTI(coo);
+    }
 
-	}
+    tmp.setCoordonnee(coo);
+    b.setBlob(tmp);
+    b.t0_to_tr();
+  }
 
-	public MyAMAS getAmas() {
-		return tAmas;
-	}
+  /**
+   * Permet d'ajouter un blob donné dans TR.
+   * Utile uniquement pour le mode test.
+   *
+   * @param b blob.
+   */
+  public void pushInBlob(final Migrant b) {
+    System.out.println("je suis le 1 :"
+        + b.getBlob().getMaSuperCouleurPreferee().toString());
+    if (b == blobToMove) {
+      unselect();
+    }
+    System.out.println("je suis le blob :"
+        + b.getBlob().getMaSuperCouleurPreferee().toString());
+    b.tr_to_t0();
+  }
 
-	public void updateRender() {
-		if (experience) {
-			if (drawOriginelExp != null) drawOriginelExp.getPanel().repaint();
-			if (drawReelExp != null) drawReelExp.getPanel().repaint();
-			if (drawIdeelExp != null) drawIdeelExp.getPanel().repaint();
-		} else {
-			if (drawOriginel != null) drawOriginel.getPanel().repaint();
-			if (drawReel != null) drawReel.getPanel().repaint();
-			if (drawIdeel != null) drawIdeel.getPanel().repaint();
-			if (apercu != null) apercu.getPanel().repaint();
-		}
-	}
+  /**
+   * Permet de faire bouger un blob donné à une coordonnée donnée.
+   * Utile uniquement pour le mode test.
+   *
+   * @param b   blob.
+   * @param coo coordonnée.
+   */
+  public void moveBlob(final Migrant b, final double[] coo) {
+    b.getBlob().setCoordonnee(coo);
 
-	@FXML
-	public void onChangeTaille() {
-		this.drawOriginel.setTaille((float)sdTaille.getValue());
-		this.drawReel.setTaille((float)sdTaille.getValue());
-		this.drawIdeel.setTaille((float)sdTaille.getValue());
-		this.apercu.setTaille((float)sdTaille.getValue());
-		if (experience) {
-			this.drawOriginelExp.setTaille((float)sdTaille.getValue());
-			this.drawReelExp.setTaille((float)sdTaille.getValue());
-			this.drawIdeelExp.setTaille((float)sdTaille.getValue());
-		}
-	}
+  }
 
-	@FXML
-	public void onChangeBlobitude() {
-		this.drawOriginel.setBlobitude((float)sdBlob.getValue());
-		this.drawReel.setBlobitude((float)sdBlob.getValue());
-		this.drawIdeel.setBlobitude((float)sdBlob.getValue());
-		this.apercu.setBlobitude((float)sdBlob.getValue());
-		if (experience) {
-			this.drawOriginelExp.setBlobitude((float)sdBlob.getValue());
-			this.drawReelExp.setBlobitude((float)sdBlob.getValue());
-			this.drawIdeelExp.setBlobitude((float)sdBlob.getValue());
-		}
-	}
+  /**
+   * @return Amas
+   */
+  public MyAMAS getAmas() {
+    return tAmas;
+  }
+
+  /**
+   * Permet l'affichage graphique du contenu des fenêtres.
+   */
+  public void updateRender() {
+    if (drawOriginel != null) {
+      drawOriginel.getPanel().repaint();
+    }
+    if (drawReel != null) {
+      drawReel.getPanel().repaint();
+    }
+    if (drawIdeel != null) {
+      drawIdeel.getPanel().repaint();
+    }
+    if (experience) {
+      if (drawOriginelExp != null) {
+        drawOriginelExp.getPanel().repaint();
+      }
+      if (drawReelExp != null) {
+        drawReelExp.getPanel().repaint();
+      }
+      if (drawIdeelExp != null) {
+        drawIdeelExp.getPanel().repaint();
+      }
+    }
+
+  }
+
+  /**
+   * Change la taille des blobs.
+   */
+  @FXML
+  public void onChangeSetRadius() {
+    this.drawOriginel.setRadius((float) sdTaille.getValue());
+    this.drawReel.setRadius((float) sdTaille.getValue());
+    this.drawIdeel.setRadius((float) sdTaille.getValue());
+    this.preview.setRadius((float) sdTaille.getValue());
+    if (experience) {
+      this.drawOriginelExp.setRadius((float) sdTaille.getValue());
+      this.drawReelExp.setRadius((float) sdTaille.getValue());
+      this.drawIdeelExp.setRadius((float) sdTaille.getValue());
+    }
+  }
+
+  /**
+   * Change la "blobitude" des blobs.
+   */
+  @FXML
+  public void onChangeSetBlobbiness() {
+    this.drawOriginel.setBlobbiness((float) sdBlob.getValue());
+    this.drawReel.setBlobbiness((float) sdBlob.getValue());
+    this.drawIdeel.setBlobbiness((float) sdBlob.getValue());
+    this.preview.setBlobbiness((float) sdBlob.getValue());
+    if (experience) {
+      this.drawOriginelExp.setBlobbiness((float) sdBlob.getValue());
+      this.drawReelExp.setBlobbiness((float) sdBlob.getValue());
+      this.drawIdeelExp.setBlobbiness((float) sdBlob.getValue());
+    }
+  }
 }
-/*
-il suffit de construire une BufferedImage (format d'image standard de Java) et de la passer ÃÂÃÂ  un ImagePlus ou ImageProcessor (format ImageJ).
-
-BufferedImage monimage = new BufferedImage(width, height, BufferedImage.LeTypeVoulu) ;
-
-//Puis en fonction du type de l'image
-return new BinaryProcessor(new ByteProcessor((java.awt.Image)source)) ;
-return new ByteProcessor(source) ;
-return new ShortProcessor(source) ;
-*/
