@@ -7,28 +7,53 @@ import javafx.scene.Parent;
 import pathfinding.Pathfinder;
 
 public class VueExpo extends Parent {
+    /**
+     * Liste des visiteurs de la VueExpo.
+     */
+    private LinkedList<Visiteur> visiteurs;
 
-	private LinkedList<Visiteur> visiteurs;
+    /**
+     * Constructeur de la classe VueExpo.
+     */
+    public VueExpo() {
+        visiteurs = new LinkedList<>();
+    }
 
-	public VueExpo() {
-		visiteurs = new LinkedList<Visiteur>();
-	}
+    /**
+     * Méthode permettant d'ajouter un visiteur à la liste des visiteurs
+     * présents lors de l'exposition.
+     *
+     * @param m
+     * @param x
+     * @param y
+     * @param rayonTerrain
+     */
+    public void addVisitor(final Migrant m, final float x,
+                           final float y, final double rayonTerrain) {
+        Visiteur v = new Visiteur(this, m, x, y, rayonTerrain);
+        visiteurs.add(v);
+        getChildren().add(v);
+    }
 
-	public void ajouterVisiteur(Migrant m, float x, float y, double rayonTerrain) {
-		Visiteur v = new Visiteur(this, m, x, y, rayonTerrain);
-		visiteurs.add(v);
-		getChildren().add(v);
-	}
+    /**
+     * Méthode permettant de mettre à jour chacun des visiteurs de la VueExpo.
+     *
+     * @param listeCibles
+     * @param pf
+     */
+    public void updateVisitors(final List<int[]> listeCibles,
+                               final Pathfinder pf) {
+        for (Visiteur v : visiteurs) {
+            v.update(listeCibles, pf);
+        }
+    }
 
-	public void updateVisiteurs(List<int[]> listeCibles, Pathfinder pf) {
-		for (Visiteur v : visiteurs) {
-			v.update(listeCibles, pf);
-		}
-	}
-
-	public void deselectionne() {
-		for (Visiteur v : visiteurs) {
-			v.deselectionne();
-		}
-	}
+    /**
+     * Méthode permettant de déselectionner les visiteurs de la VueExpo.
+     */
+    public void unselectVisitors() {
+        for (Visiteur v : visiteurs) {
+            v.unselect();
+        }
+    }
 }
