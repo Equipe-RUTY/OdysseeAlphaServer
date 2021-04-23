@@ -38,9 +38,9 @@ Java 1.8 d'**Oracle** impérativement (créer un compte et [télécharger ici](h
 
 [EB-LEVADOUX Ugo](https://www.linkedin.com/in/ugo-eb-levadoux/) - MOE - [gogonouze](https://github.com/gogonouze)
 
-[DELCOURT Kévin]() - AMO - [KevinDelcourt](https://github.com/KevinDelcourt)
+[DELCOURT Kévin](http://kevin-delcourt.net/) - AMO - [KevinDelcourt](https://github.com/KevinDelcourt)
 
-[ANDRÉ Nicolas]() - AMO - [Nicolas ANDRÉ](https://github.com/iomega11)
+[ANDRÉ Nicolas](https://nicolasandre.fr) - AMO - [Nicolas ANDRÉ](https://github.com/iomega11)
 
 [GUICHARD Clément]() - AMO - [CGuichardMasterDL](https://github.com/CGuichardMasterDL) 
 
